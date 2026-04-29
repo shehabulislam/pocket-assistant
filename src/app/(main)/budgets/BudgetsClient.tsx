@@ -60,10 +60,8 @@ export default function BudgetsClient({
   const [limitAmount, setLimitAmount] = useState("");
   const [error, setError] = useState("");
 
-  // Categories that don't have a budget yet
-  const availableCategories = expenseCategories.filter(
-    (cat) => !budgets.some((b) => b.categoryId === cat.id)
-  );
+  // All expense categories available for budgeting (existing budgets can be updated)
+  const budgetByCategoryId = new Map(budgets.map((b) => [b.categoryId, b]));
 
   const totalPct = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
   const isOverBudget = totalPct > 100;
@@ -310,37 +308,48 @@ export default function BudgetsClient({
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
               Category
             </p>
-            {availableCategories.length === 0 ? (
+            {expenseCategories.length === 0 ? (
               <p className="text-sm text-gray-400 mb-4">
-                All categories already have budgets set.
+                No expense categories found. Add categories first.
               </p>
             ) : (
               <div className="grid grid-cols-3 gap-2 mb-4 max-h-48 overflow-y-auto">
-                {availableCategories.map((cat) => (
-                  <button
-                    key={cat.id}
-                    onClick={() => setSelectedCategoryId(cat.id)}
-                    className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all ${
-                      selectedCategoryId === cat.id
-                        ? "bg-emerald-50 border-2 border-emerald-400"
-                        : "border-gray-100 hover:bg-gray-50"
-                    }`}
-                  >
-                    <span
-                      className="w-9 h-9 rounded-lg flex items-center justify-center text-base"
-                      style={{
-                        backgroundColor: cat.color
-                          ? `${cat.color}15`
-                          : "#f3f4f6",
+                {expenseCategories.map((cat) => {
+                  const existingBudget = budgetByCategoryId.get(cat.id);
+                  return (
+                    <button
+                      key={cat.id}
+                      onClick={() => {
+                        setSelectedCategoryId(cat.id);
+                        if (existingBudget) {
+                          setLimitAmount(String(existingBudget.limit));
+                        }
                       }}
+                      className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all relative ${
+                        selectedCategoryId === cat.id
+                          ? "bg-emerald-50 border-2 border-emerald-400"
+                          : "border-gray-100 hover:bg-gray-50"
+                      }`}
                     >
-                      {cat.icon || "📦"}
-                    </span>
-                    <span className="text-[10px] font-medium text-gray-600 text-center leading-tight">
-                      {cat.name}
-                    </span>
-                  </button>
-                ))}
+                      <span
+                        className="w-9 h-9 rounded-lg flex items-center justify-center text-base"
+                        style={{
+                          backgroundColor: cat.color
+                            ? `${cat.color}15`
+                            : "#f3f4f6",
+                        }}
+                      >
+                        {cat.icon || "📦"}
+                      </span>
+                      <span className="text-[10px] font-medium text-gray-600 text-center leading-tight">
+                        {cat.name}
+                      </span>
+                      {existingBudget && (
+                        <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-emerald-400" />
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             )}
 

@@ -34,6 +34,7 @@ import {
   Lock,
   ChevronRight,
   Landmark,
+  Target,
 } from "lucide-react";
 
 interface SettingsClientProps {
@@ -315,6 +316,13 @@ export default function SettingsClient({ user }: SettingsClientProps) {
             label="Budgets"
             subtitle="Set spending limits"
             onClick={() => router.push("/budgets")}
+          />
+          <SettingsItem
+            icon={Target}
+            iconBg="#F59E0B"
+            label="Goals"
+            subtitle="Track your savings goals"
+            onClick={() => router.push("/goals")}
           />
           <SettingsItem
             icon={Users}

@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { ensureDefaultCategories } from "@/lib/default-categories";
 import BudgetsClient from "./BudgetsClient";
 
 export default async function BudgetsPage() {
@@ -7,6 +8,10 @@ export default async function BudgetsPage() {
   if (!session?.user?.id) return null;
 
   const userId = session.user.id;
+
+  // Auto-seed default categories if user has none
+  await ensureDefaultCategories(userId);
+
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   const endOfMonth = new Date(
