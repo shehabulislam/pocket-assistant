@@ -14,7 +14,6 @@ export async function GET() {
       include: {
         category: { select: { name: true } },
         account: { select: { name: true } },
-        paymentType: { select: { name: true } },
       },
       orderBy: { date: "desc" },
     });
@@ -26,7 +25,6 @@ export async function GET() {
       "Category",
       "Amount",
       "Account",
-      "Payment Method",
       "Description",
     ];
 
@@ -36,7 +34,6 @@ export async function GET() {
       t.category.name,
       t.amount.toFixed(2),
       t.account.name,
-      t.paymentType?.name || "",
       `"${(t.description || "").replace(/"/g, '""')}"`,
     ]);
 

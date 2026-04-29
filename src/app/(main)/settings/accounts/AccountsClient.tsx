@@ -9,6 +9,7 @@ import { formatCurrency } from "@/lib/utils";
 const ACCOUNT_TYPES = [
   { value: "CASH", label: "Cash", icon: "💵", color: "#10B981" },
   { value: "BANK", label: "Bank", icon: "🏦", color: "#3B82F6" },
+  { value: "MOBILE_BANKING", label: "Mobile Banking", icon: "📱", color: "#06B6D4" },
   { value: "CREDIT", label: "Credit", icon: "💳", color: "#F59E0B" },
   { value: "INVESTMENT", label: "Investment", icon: "📈", color: "#8B5CF6" },
 ] as const;
@@ -21,7 +22,7 @@ const ACCOUNT_ICONS = [
 interface AccountItem {
   id: string;
   name: string;
-  type: "CASH" | "BANK" | "CREDIT" | "INVESTMENT";
+  type: "CASH" | "BANK" | "MOBILE_BANKING" | "CREDIT" | "INVESTMENT";
   balance: number;
   _count: { transactions: number };
 }
@@ -39,7 +40,7 @@ export default function AccountsClient({
   const [isPending, startTransition] = useTransition();
   const [showAdd, setShowAdd] = useState(false);
   const [name, setName] = useState("");
-  const [type, setType] = useState<"CASH" | "BANK" | "CREDIT" | "INVESTMENT">("BANK");
+  const [type, setType] = useState<"CASH" | "BANK" | "MOBILE_BANKING" | "CREDIT" | "INVESTMENT">("BANK");
   const [icon, setIcon] = useState("🏦");
   const [balance, setBalance] = useState("0");
   const [error, setError] = useState("");

@@ -1,9 +1,15 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+enum Role {
+  USER
+  SUPERADMIN
 }
 
 model User {
@@ -16,13 +22,13 @@ model User {
   language      String    @default("en")
   budgetPeriod  Int       @default(1)
   viewPeriod    String    @default("monthly")
+  role          Role      @default(USER)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
   accounts      Account[]
   transactions  Transaction[]
   categories    Category[]
-  paymentTypes  PaymentType[]
   budgets       Budget[]
   goals         Goal[]
   tags          Tag[]
@@ -45,6 +51,7 @@ model Account {
 enum AccountType {
   CASH
   BANK
+  MOBILE_BANKING
   CREDIT
   INVESTMENT
 }
@@ -59,8 +66,6 @@ model Transaction {
   category      Category           @relation(fields: [categoryId], references: [id])
   accountId     String
   account       Account            @relation(fields: [accountId], references: [id])
-  paymentTypeId String?
-  paymentType   PaymentType?       @relation(fields: [paymentTypeId], references: [id])
   tags          TagOnTransaction[]
   userId        String
   user          User               @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -89,15 +94,6 @@ model Category {
 enum CategoryType {
   INCOME
   EXPENSE
-}
-
-model PaymentType {
-  id           String        @id @default(cuid())
-  name         String
-  icon         String?
-  userId       String
-  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  transactions Transaction[]
 }
 
 model Tag {

@@ -29,14 +29,7 @@ const DEFAULT_INCOME_CATEGORIES = [
   { name: "Other Income", icon: "💵", color: "#6366F1" },
 ];
 
-const DEFAULT_PAYMENT_TYPES = [
-  { name: "Cash", icon: "💵" },
-  { name: "Bank Transfer", icon: "🏦" },
-  { name: "bKash", icon: "📱" },
-  { name: "Nagad", icon: "📲" },
-  { name: "Credit Card", icon: "💳" },
-  { name: "Debit Card", icon: "💳" },
-];
+
 
 async function main() {
   console.log("🌱 Seeding database...");
@@ -98,23 +91,7 @@ async function main() {
 
   console.log(`✅ ${DEFAULT_INCOME_CATEGORIES.length} income categories seeded`);
 
-  // Seed payment types
-  for (const pt of DEFAULT_PAYMENT_TYPES) {
-    await prisma.paymentType.upsert({
-      where: {
-        id: `default-pt-${pt.name.toLowerCase().replace(/\s+/g, "-")}`,
-      },
-      update: {},
-      create: {
-        id: `default-pt-${pt.name.toLowerCase().replace(/\s+/g, "-")}`,
-        name: pt.name,
-        icon: pt.icon,
-        userId: user.id,
-      },
-    });
-  }
 
-  console.log(`✅ ${DEFAULT_PAYMENT_TYPES.length} payment types seeded`);
 
   // Create default account
   await prisma.account.upsert({

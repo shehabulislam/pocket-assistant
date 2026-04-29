@@ -27,14 +27,7 @@ const DEFAULT_INCOME_CATEGORIES = [
   { name: "Other Income", icon: "💵", color: "#6366F1" },
 ];
 
-const DEFAULT_PAYMENT_TYPES = [
-  { name: "Cash", icon: "💵" },
-  { name: "Bank Transfer", icon: "🏦" },
-  { name: "bKash", icon: "📱" },
-  { name: "Nagad", icon: "📲" },
-  { name: "Credit Card", icon: "💳" },
-  { name: "Debit Card", icon: "💳" },
-];
+
 
 export async function POST(request: Request) {
   try {
@@ -43,7 +36,7 @@ export async function POST(request: Request) {
 
     if (!validation.success) {
       return NextResponse.json(
-        { error: validation.error.errors[0].message },
+        { error: validation.error.issues[0].message },
         { status: 400 }
       );
     }
@@ -108,13 +101,6 @@ export async function POST(request: Request) {
               isDefault: true,
             })),
           ],
-        },
-        // Create default payment types
-        paymentTypes: {
-          create: DEFAULT_PAYMENT_TYPES.map((pt) => ({
-            name: pt.name,
-            icon: pt.icon,
-          })),
         },
       },
     });

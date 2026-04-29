@@ -22,7 +22,6 @@ export const transactionSchema = z.object({
   accountId: z.string().min(1, "Please select an account"),
   description: z.string().optional(),
   date: z.string().or(z.date()),
-  paymentTypeId: z.string().optional(),
 });
 
 export type LoginInput = z.infer<typeof loginSchema>;

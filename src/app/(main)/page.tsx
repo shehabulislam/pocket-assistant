@@ -29,7 +29,6 @@ export default async function HomePage({
     include: {
       category: true,
       account: true,
-      paymentType: true,
     },
     orderBy: { date: "desc" },
     take: 50,

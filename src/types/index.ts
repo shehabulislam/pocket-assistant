@@ -1,6 +1,6 @@
 export type TransactionType = "INCOME" | "EXPENSE";
 export type CategoryType = "INCOME" | "EXPENSE";
-export type AccountType = "CASH" | "BANK" | "CREDIT" | "INVESTMENT";
+export type AccountType = "CASH" | "BANK" | "MOBILE_BANKING" | "CREDIT" | "INVESTMENT";
 export type ViewPeriod = "monthly" | "weekly" | "yearly";
 export type Frequency = "daily" | "weekly" | "monthly" | "yearly";
 
@@ -27,11 +27,6 @@ export interface TransactionWithCategory {
     name: string;
     type: AccountType;
   };
-  paymentType?: {
-    id: string;
-    name: string;
-    icon: string | null;
-  } | null;
 }
 
 export interface MonthlySummary {

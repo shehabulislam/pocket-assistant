@@ -12,7 +12,6 @@ import {
   Upload,
   Wallet,
   Users,
-  Cloud,
   FileDown,
   Repeat,
   Tag,
@@ -45,6 +44,7 @@ interface SettingsClientProps {
     language: string;
     budgetPeriod: number;
     viewPeriod: string;
+    role: string;
     settings: {
       theme: string;
       pushNotifications: boolean;
@@ -215,6 +215,8 @@ export default function SettingsClient({ user }: SettingsClientProps) {
         .join("")
         .toUpperCase()
     : "U";
+  
+  const isSuperAdmin = user.role === "SUPERADMIN";
 
   return (
     <div className="animate-fadeIn">
@@ -289,12 +291,7 @@ export default function SettingsClient({ user }: SettingsClientProps) {
             label="Manage Categories"
             onClick={() => router.push("/settings/categories")}
           />
-          <SettingsItem
-            icon={CreditCard}
-            iconBg="#3B82F6"
-            label="Manage Payment Types"
-            onClick={() => router.push("/settings/payment-types")}
-          />
+
           <SettingsItem
             icon={Landmark}
             iconBg="#14B8A6"
@@ -324,15 +321,10 @@ export default function SettingsClient({ user }: SettingsClientProps) {
             iconBg="#EF4444"
             label="Partner Mode"
             subtitle="Share expenses with your partner"
-            locked
+            locked={!isSuperAdmin}
+            onClick={() => !isSuperAdmin ? null : router.push("/partner")}
           />
-          <SettingsItem
-            icon={Cloud}
-            iconBg="#3B82F6"
-            label="Cloud Sync"
-            subtitle="Back up and sync your data"
-            locked
-          />
+
           <SettingsItem
             icon={FileDown}
             iconBg="#10B981"
@@ -345,14 +337,16 @@ export default function SettingsClient({ user }: SettingsClientProps) {
             iconBg="#8B5CF6"
             label="Recurring Transactions"
             subtitle="Auto-log rent, subscriptions, salary"
-            locked
+            locked={!isSuperAdmin}
+            onClick={() => !isSuperAdmin ? null : router.push("/recurring")}
           />
           <SettingsItem
             icon={Tag}
             iconBg="#F59E0B"
             label="Tags"
             subtitle="Organize transactions"
-            locked
+            locked={!isSuperAdmin}
+            onClick={() => !isSuperAdmin ? null : router.push("/tags")}
           />
         </SettingsSection>
 

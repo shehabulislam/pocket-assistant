@@ -20,12 +20,6 @@ interface Account {
   type: string;
 }
 
-interface PaymentType {
-  id: string;
-  name: string;
-  icon: string | null;
-}
-
 interface TransactionData {
   id: string;
   amount: number;
@@ -34,7 +28,6 @@ interface TransactionData {
   description: string | null;
   categoryId: string;
   accountId: string;
-  paymentTypeId: string | null;
   category: Category;
 }
 
@@ -42,14 +35,12 @@ interface EditTransactionClientProps {
   transaction: TransactionData;
   categories: Category[];
   accounts: Account[];
-  paymentTypes: PaymentType[];
 }
 
 export default function EditTransactionClient({
   transaction,
   categories,
   accounts,
-  paymentTypes,
 }: EditTransactionClientProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -57,9 +48,6 @@ export default function EditTransactionClient({
   const [amount, setAmount] = useState(transaction.amount.toString());
   const [categoryId, setCategoryId] = useState(transaction.categoryId);
   const [accountId, setAccountId] = useState(transaction.accountId);
-  const [paymentTypeId, setPaymentTypeId] = useState(
-    transaction.paymentTypeId || ""
-  );
   const [description, setDescription] = useState(
     transaction.description || ""
   );
@@ -90,7 +78,6 @@ export default function EditTransactionClient({
         type: transaction.type,
         categoryId,
         accountId,
-        paymentTypeId: paymentTypeId || undefined,
         description: description || undefined,
         date,
       });
@@ -292,36 +279,6 @@ export default function EditTransactionClient({
             ))}
           </div>
         </div>
-
-        {/* Payment Type */}
-        {paymentTypes.length > 0 && (
-          <div className="mb-4">
-            <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-              Payment Method
-            </label>
-            <div className="flex gap-2 flex-wrap">
-              {paymentTypes.map((pt) => (
-                <button
-                  key={pt.id}
-                  onClick={() =>
-                    setPaymentTypeId(paymentTypeId === pt.id ? "" : pt.id)
-                  }
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium border transition-all ${
-                    paymentTypeId === pt.id
-                      ? `${accentBg} ${accentText} border-2`
-                      : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100"
-                  }`}
-                  style={
-                    paymentTypeId === pt.id ? { borderColor: accentColor } : {}
-                  }
-                >
-                  <span className="text-base">{pt.icon}</span>
-                  {pt.name}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* Date */}
         <div className="mb-4">

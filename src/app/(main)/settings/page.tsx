@@ -15,6 +15,7 @@ export default async function SettingsPage() {
       language: true,
       budgetPeriod: true,
       viewPeriod: true,
+      role: true,
       settings: true,
     },
   });

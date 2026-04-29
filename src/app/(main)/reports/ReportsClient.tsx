@@ -260,8 +260,8 @@ export default function ReportsClient({
                         boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
                         fontSize: "12px",
                       }}
-                      formatter={(value: number, name: string) => [
-                        formatCurrency(value, currency),
+                      formatter={(value: any, name: any) => [
+                        formatCurrency(Number(value || 0), currency),
                         name === "income" ? "Income" : "Expense",
                       ]}
                       labelFormatter={(label) => `Day ${label}`}

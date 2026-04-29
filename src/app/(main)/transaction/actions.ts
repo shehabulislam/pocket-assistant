@@ -9,7 +9,6 @@ export async function createTransaction(formData: {
   type: "INCOME" | "EXPENSE";
   categoryId: string;
   accountId: string;
-  paymentTypeId?: string;
   description?: string;
   date: string;
 }) {
@@ -28,7 +27,6 @@ export async function createTransaction(formData: {
         type: formData.type,
         categoryId: formData.categoryId,
         accountId: formData.accountId,
-        paymentTypeId: formData.paymentTypeId || null,
         description: formData.description || null,
         date: new Date(formData.date),
         userId,
@@ -57,7 +55,6 @@ export async function updateTransaction(
     type: "INCOME" | "EXPENSE";
     categoryId: string;
     accountId: string;
-    paymentTypeId?: string;
     description?: string;
     date: string;
   }
@@ -97,7 +94,6 @@ export async function updateTransaction(
         type: formData.type,
         categoryId: formData.categoryId,
         accountId: formData.accountId,
-        paymentTypeId: formData.paymentTypeId || null,
         description: formData.description || null,
         date: new Date(formData.date),
       },

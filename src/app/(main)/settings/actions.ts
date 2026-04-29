@@ -69,53 +69,13 @@ export async function deleteCategory(id: string) {
   }
 }
 
-export async function createPaymentType(data: {
-  name: string;
-  icon: string;
-}) {
-  const session = await auth();
-  if (!session?.user?.id) return { error: "Unauthorized" };
 
-  try {
-    await prisma.paymentType.create({
-      data: { ...data, userId: session.user.id },
-    });
-    revalidatePath("/settings/payment-types");
-    return { success: true };
-  } catch (error) {
-    console.error("Create payment type error:", error);
-    return { error: "Failed to create payment type" };
-  }
-}
-
-export async function deletePaymentType(id: string) {
-  const session = await auth();
-  if (!session?.user?.id) return { error: "Unauthorized" };
-
-  try {
-    const count = await prisma.transaction.count({
-      where: { paymentTypeId: id },
-    });
-    if (count > 0) {
-      return {
-        error: `Cannot delete: ${count} transaction(s) use this payment type`,
-      };
-    }
-
-    await prisma.paymentType.delete({ where: { id } });
-    revalidatePath("/settings/payment-types");
-    return { success: true };
-  } catch (error) {
-    console.error("Delete payment type error:", error);
-    return { error: "Failed to delete payment type" };
-  }
-}
 
 // ---- Account Actions ----
 
 export async function createAccount(data: {
   name: string;
-  type: "CASH" | "BANK" | "CREDIT" | "INVESTMENT";
+  type: "CASH" | "BANK" | "MOBILE_BANKING" | "CREDIT" | "INVESTMENT";
   icon: string;
   balance: number;
 }) {
