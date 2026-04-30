@@ -200,13 +200,20 @@ export default function HomeClient({
       <div className="px-4 mb-4">
         <div
           className="rounded-2xl p-6 text-white animate-scaleIn"
-          style={{ background: "var(--gradient-card)" }}
+          style={{
+            background:
+              netBalance <= 0
+                ? "linear-gradient(135deg, #f87171 0%, #ef4444 50%, #dc2626 100%)"
+                : totalIncome > 0 && totalExpense > totalIncome * 0.75
+                  ? "linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%)"
+                  : "var(--gradient-card)",
+          }}
         >
           <p className="text-sm font-medium text-white/80 text-center">
             Net Balance
           </p>
           <p className="text-3xl font-bold text-center mt-1 tracking-tight">
-            {formatCurrency(netBalance, currency)}
+            {netBalance < 0 ? `-${formatCurrency(Math.abs(netBalance), currency)}` : formatCurrency(netBalance, currency)}
           </p>
           <div className="flex justify-between mt-5 pt-4 border-t border-white/20">
             <div className="text-center flex-1">

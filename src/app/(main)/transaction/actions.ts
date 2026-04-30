@@ -21,6 +21,27 @@ export async function createTransaction(formData: {
     const userId = session.user.id;
     const amount = Math.abs(formData.amount);
 
+    // Check account balance for expenses
+    if (formData.type === "EXPENSE") {
+      const account = await prisma.account.findFirst({
+        where: { id: formData.accountId, userId },
+        select: { balance: true, name: true },
+      });
+
+      if (!account) {
+        return { error: "Account not found" };
+      }
+
+      if (account.balance <= 0) {
+        return { error: `Insufficient balance in ${account.name}. Current balance is ৳0.00` };
+      }
+
+      if (account.balance < amount) {
+        const bal = account.balance.toLocaleString("en-US", { minimumFractionDigits: 2 });
+        return { error: `Insufficient balance in ${account.name}. Available: ৳${bal}` };
+      }
+    }
+
     const transaction = await prisma.transaction.create({
       data: {
         amount,
