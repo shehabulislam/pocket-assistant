@@ -418,11 +418,11 @@ export default function HomeClient({
 
       {/* Transaction Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 animate-fadeIn">
-          <div className="bg-white rounded-t-3xl sm:rounded-2xl w-full max-w-md shadow-xl animate-slideUp max-h-[92vh] overflow-y-auto">
+        <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/40 animate-fadeIn">
+          <div className="bg-white rounded-t-3xl sm:rounded-2xl w-full max-w-md shadow-xl animate-slideUp max-h-[92vh] flex flex-col">
             {/* Modal Header */}
             <div
-              className="sticky top-0 z-10 rounded-t-3xl sm:rounded-t-2xl border-b px-4 py-3 flex items-center justify-between"
+              className="shrink-0 rounded-t-3xl sm:rounded-t-2xl border-b px-4 py-3 flex items-center justify-between"
               style={{
                 backgroundColor: `${accentColor}08`,
                 borderColor: `${accentColor}20`,
@@ -439,172 +439,177 @@ export default function HomeClient({
               </button>
             </div>
 
-            {/* Amount */}
-            <div className="px-4 pt-6 pb-4 text-center">
-              <p className="text-xs font-medium text-gray-500 mb-2">Amount</p>
-              <div className="flex items-center justify-center gap-1">
-                <span className={`text-3xl font-bold ${accentText}`}>৳</span>
-                <input
-                  type="number"
-                  inputMode="decimal"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  placeholder="0.00"
-                  className={`text-3xl font-bold ${accentText} bg-transparent border-none outline-none text-center w-44 placeholder-gray-300`}
-                  autoFocus
-                />
-              </div>
-              {amount && parseFloat(amount) > 0 && (
-                <p className="text-xs text-gray-400 mt-1">
-                  {formatCurrency(parseFloat(amount), currency)}
-                </p>
-              )}
-            </div>
-
-            {/* Form Fields */}
-            <div className="px-4 pb-6">
-              {error && (
-                <div className="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-xl border border-red-100 mb-4 animate-shake">
-                  {error}
+            {/* Scrollable content */}
+            <div className="flex-1 overflow-y-auto">
+              {/* Amount */}
+              <div className="px-4 pt-6 pb-4 text-center">
+                <p className="text-xs font-medium text-gray-500 mb-2">Amount</p>
+                <div className="flex items-center justify-center gap-1">
+                  <span className={`text-3xl font-bold ${accentText}`}>৳</span>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    placeholder="0.00"
+                    className={`text-3xl font-bold ${accentText} bg-transparent border-none outline-none text-center w-44 placeholder-gray-300`}
+                    autoFocus
+                  />
                 </div>
-              )}
+                {amount && parseFloat(amount) > 0 && (
+                  <p className="text-xs text-gray-400 mt-1">
+                    {formatCurrency(parseFloat(amount), currency)}
+                  </p>
+                )}
+              </div>
 
-              {/* Category */}
-              <div className="mb-4">
-                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-                  Category
-                </label>
-                <button
-                  onClick={() => setShowCategories(!showCategories)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition-all ${
-                    categoryId
-                      ? "border-gray-200 bg-white"
-                      : "border-dashed border-gray-300 bg-gray-50"
-                  }`}
-                >
-                  {selectedCategory ? (
-                    <>
-                      <span
-                        className="w-9 h-9 rounded-lg flex items-center justify-center text-base"
-                        style={{
-                          backgroundColor: selectedCategory.color
-                            ? `${selectedCategory.color}15`
-                            : "#f3f4f6",
-                        }}
-                      >
-                        {selectedCategory.icon || "📦"}
+              {/* Form Fields */}
+              <div className="px-4 pb-4">
+                {error && (
+                  <div className="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-xl border border-red-100 mb-4 animate-shake">
+                    {error}
+                  </div>
+                )}
+
+                {/* Category */}
+                <div className="mb-4">
+                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                    Category
+                  </label>
+                  <button
+                    onClick={() => setShowCategories(!showCategories)}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition-all ${
+                      categoryId
+                        ? "border-gray-200 bg-white"
+                        : "border-dashed border-gray-300 bg-gray-50"
+                    }`}
+                  >
+                    {selectedCategory ? (
+                      <>
+                        <span
+                          className="w-9 h-9 rounded-lg flex items-center justify-center text-base"
+                          style={{
+                            backgroundColor: selectedCategory.color
+                              ? `${selectedCategory.color}15`
+                              : "#f3f4f6",
+                          }}
+                        >
+                          {selectedCategory.icon || "📦"}
+                        </span>
+                        <span className="text-sm font-medium text-gray-900">
+                          {selectedCategory.name}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-sm text-gray-400">
+                        Tap to select a category
                       </span>
-                      <span className="text-sm font-medium text-gray-900">
-                        {selectedCategory.name}
-                      </span>
-                    </>
-                  ) : (
-                    <span className="text-sm text-gray-400">
-                      Tap to select a category
-                    </span>
+                    )}
+                  </button>
+
+                  {showCategories && (
+                    <div className="mt-2 grid grid-cols-3 gap-2 animate-slideDown">
+                      {modalCategories.map((cat) => (
+                        <button
+                          key={cat.id}
+                          onClick={() => {
+                            setCategoryId(cat.id);
+                            setShowCategories(false);
+                          }}
+                          className={`flex flex-col items-center gap-1 p-2.5 rounded-xl border transition-all ${
+                            categoryId === cat.id
+                              ? `border-2 ${accentBg}`
+                              : "border-gray-100 hover:bg-gray-50"
+                          }`}
+                          style={
+                            categoryId === cat.id
+                              ? { borderColor: accentColor }
+                              : {}
+                          }
+                        >
+                          <span
+                            className="w-9 h-9 rounded-lg flex items-center justify-center text-base"
+                            style={{
+                              backgroundColor: cat.color
+                                ? `${cat.color}15`
+                                : "#f3f4f6",
+                            }}
+                          >
+                            {cat.icon || "📦"}
+                          </span>
+                          <span className="text-[10px] font-medium text-gray-600 text-center leading-tight">
+                            {cat.name}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
                   )}
-                </button>
+                </div>
 
-                {showCategories && (
-                  <div className="mt-2 grid grid-cols-3 gap-2 animate-slideDown">
-                    {modalCategories.map((cat) => (
+                {/* Account */}
+                <div className="mb-4">
+                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                    Account
+                  </label>
+                  <div className="flex gap-2 flex-wrap">
+                    {accounts.map((acc) => (
                       <button
-                        key={cat.id}
-                        onClick={() => {
-                          setCategoryId(cat.id);
-                          setShowCategories(false);
-                        }}
-                        className={`flex flex-col items-center gap-1 p-2.5 rounded-xl border transition-all ${
-                          categoryId === cat.id
-                            ? `border-2 ${accentBg}`
-                            : "border-gray-100 hover:bg-gray-50"
+                        key={acc.id}
+                        onClick={() => setAccountId(acc.id)}
+                        className={`px-3.5 py-2 rounded-xl text-sm font-medium border transition-all ${
+                          accountId === acc.id
+                            ? `${accentBg} ${accentText} border-2`
+                            : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100"
                         }`}
                         style={
-                          categoryId === cat.id
+                          accountId === acc.id
                             ? { borderColor: accentColor }
                             : {}
                         }
                       >
-                        <span
-                          className="w-9 h-9 rounded-lg flex items-center justify-center text-base"
-                          style={{
-                            backgroundColor: cat.color
-                              ? `${cat.color}15`
-                              : "#f3f4f6",
-                          }}
-                        >
-                          {cat.icon || "📦"}
-                        </span>
-                        <span className="text-[10px] font-medium text-gray-600 text-center leading-tight">
-                          {cat.name}
-                        </span>
+                        {acc.name}
                       </button>
                     ))}
                   </div>
-                )}
-              </div>
-
-              {/* Account */}
-              <div className="mb-4">
-                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-                  Account
-                </label>
-                <div className="flex gap-2 flex-wrap">
-                  {accounts.map((acc) => (
-                    <button
-                      key={acc.id}
-                      onClick={() => setAccountId(acc.id)}
-                      className={`px-3.5 py-2 rounded-xl text-sm font-medium border transition-all ${
-                        accountId === acc.id
-                          ? `${accentBg} ${accentText} border-2`
-                          : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100"
-                      }`}
-                      style={
-                        accountId === acc.id
-                          ? { borderColor: accentColor }
-                          : {}
-                      }
-                    >
-                      {acc.name}
-                    </button>
-                  ))}
                 </div>
-              </div>
 
-              {/* Date */}
-              <div className="mb-4">
-                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-                  Date
-                </label>
-                <div className="relative">
-                  <Calendar
-                    size={16}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-                  />
+                {/* Date */}
+                <div className="mb-4">
+                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                    Date
+                  </label>
+                  <div className="relative">
+                    <Calendar
+                      size={16}
+                      className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+                    />
+                    <input
+                      type="date"
+                      value={date}
+                      onChange={(e) => setDate(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 transition-all"
+                    />
+                  </div>
+                </div>
+
+                {/* Description */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                    Note (Optional)
+                  </label>
                   <input
-                    type="date"
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 transition-all"
+                    type="text"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="e.g. Lunch with friends"
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 transition-all"
                   />
                 </div>
               </div>
+            </div>
 
-              {/* Description */}
-              <div className="mb-5">
-                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-                  Note (Optional)
-                </label>
-                <input
-                  type="text"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="e.g. Lunch with friends"
-                  className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 transition-all"
-                />
-              </div>
-
-              {/* Submit */}
+            {/* Submit - pinned at bottom of modal */}
+            <div className="shrink-0 px-4 pt-3 pb-4 border-t border-gray-100 bg-white rounded-b-2xl" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
               <button
                 onClick={handleSubmit}
                 disabled={isPending || !amount || !categoryId}
