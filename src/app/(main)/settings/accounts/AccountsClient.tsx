@@ -33,8 +33,10 @@ function getTypeInfo(type: string) {
 
 export default function AccountsClient({
   accounts,
+  onBack,
 }: {
   accounts: AccountItem[];
+  onBack?: () => void;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -90,7 +92,7 @@ export default function AccountsClient({
       <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-lg border-b border-gray-100">
         <div className="flex items-center justify-between px-4 py-3">
           <button
-            onClick={() => router.back()}
+            onClick={() => onBack ? onBack() : router.back()}
             className="p-1.5 rounded-full hover:bg-gray-100 transition-colors"
           >
             <ArrowLeft size={22} className="text-gray-700" />
@@ -196,9 +198,10 @@ export default function AccountsClient({
 
       {/* Add Account Modal */}
       {showAdd && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 animate-fadeIn">
-          <div className="bg-white rounded-t-3xl sm:rounded-2xl w-full max-w-md p-6 animate-slideUp shadow-xl">
-            <div className="flex items-center justify-between mb-5">
+        <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/40 animate-fadeIn">
+          <div className="bg-white rounded-t-3xl sm:rounded-2xl w-full max-w-md shadow-xl animate-slideUp max-h-[92vh] flex flex-col">
+            {/* Modal Header */}
+            <div className="shrink-0 flex items-center justify-between px-6 pt-6 pb-3">
               <h3 className="text-lg font-bold text-gray-900">
                 Add Account
               </h3>
@@ -210,97 +213,103 @@ export default function AccountsClient({
               </button>
             </div>
 
-            {/* Account Name */}
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-              Account Name
-            </p>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. bKash, Nagad, DBBL"
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-emerald-400"
-            />
-
-            {/* Account Type */}
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-              Account Type
-            </p>
-            <div className="grid grid-cols-2 gap-2 mb-4">
-              {ACCOUNT_TYPES.map((t) => (
-                <button
-                  key={t.value}
-                  onClick={() => {
-                    setType(t.value);
-                    setIcon(t.icon);
-                  }}
-                  className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm font-medium transition-all ${
-                    type === t.value
-                      ? "border-2 bg-emerald-50 text-emerald-700 border-emerald-400"
-                      : "border-gray-200 text-gray-600 hover:bg-gray-50"
-                  }`}
-                >
-                  <span className="text-lg">{t.icon}</span>
-                  {t.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Initial Balance */}
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-              Initial Balance
-            </p>
-            <div className="flex items-center gap-2 mb-5">
-              <span className="text-lg font-bold text-gray-400">৳</span>
+            {/* Scrollable Content */}
+            <div className="flex-1 overflow-y-auto px-6">
+              {/* Account Name */}
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                Account Name
+              </p>
               <input
-                type="number"
-                inputMode="decimal"
-                value={balance}
-                onChange={(e) => setBalance(e.target.value)}
-                placeholder="0.00"
-                className="flex-1 px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-lg font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="e.g. bKash, Nagad, DBBL"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-emerald-400"
               />
+
+              {/* Account Type */}
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                Account Type
+              </p>
+              <div className="grid grid-cols-2 gap-2 mb-4">
+                {ACCOUNT_TYPES.map((t) => (
+                  <button
+                    key={t.value}
+                    onClick={() => {
+                      setType(t.value);
+                      setIcon(t.icon);
+                    }}
+                    className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm font-medium transition-all ${
+                      type === t.value
+                        ? "border-2 bg-emerald-50 text-emerald-700 border-emerald-400"
+                        : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                    }`}
+                  >
+                    <span className="text-lg">{t.icon}</span>
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Initial Balance */}
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                Initial Balance
+              </p>
+              <div className="flex items-center gap-2 mb-4">
+                <span className="text-lg font-bold text-gray-400">৳</span>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  value={balance}
+                  onChange={(e) => setBalance(e.target.value)}
+                  placeholder="0.00"
+                  className="flex-1 px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-lg font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
+                />
+              </div>
+
+              {/* Preview */}
+              <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-xl">
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center text-lg"
+                  style={{
+                    backgroundColor: `${
+                      ACCOUNT_TYPES.find((t) => t.value === type)?.color || "#10B981"
+                    }15`,
+                  }}
+                >
+                  {icon}
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-900">
+                    {name || "Account Name"}
+                  </p>
+                  <p className="text-xs text-gray-400">
+                    {ACCOUNT_TYPES.find((t) => t.value === type)?.label || "Cash"} · {formatCurrency(parseFloat(balance) || 0, "BDT")}
+                  </p>
+                </div>
+              </div>
             </div>
 
-            {/* Preview */}
-            <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-xl mb-4">
-              <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center text-lg"
-                style={{
-                  backgroundColor: `${
-                    ACCOUNT_TYPES.find((t) => t.value === type)?.color || "#10B981"
-                  }15`,
-                }}
+            {/* Submit - pinned at bottom */}
+            <div className="shrink-0 px-6 pt-3 pb-4 border-t border-gray-100 bg-white rounded-b-2xl" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
+              <button
+                onClick={handleAdd}
+                disabled={isPending || !name.trim()}
+                className="w-full py-3 rounded-xl bg-emerald-500 text-white font-semibold hover:bg-emerald-600 transition-colors disabled:opacity-50 active:scale-[0.98] flex items-center justify-center gap-2"
               >
-                {icon}
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">
-                  {name || "Account Name"}
-                </p>
-                <p className="text-xs text-gray-400">
-                  {ACCOUNT_TYPES.find((t) => t.value === type)?.label || "Cash"} · {formatCurrency(parseFloat(balance) || 0, "BDT")}
-                </p>
-              </div>
+                {isPending ? (
+                  <span className="inline-flex items-center gap-2">
+                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Adding...
+                  </span>
+                ) : (
+                  <>
+                    <Check size={18} />
+                    Add Account
+                  </>
+                )}
+              </button>
             </div>
-
-            <button
-              onClick={handleAdd}
-              disabled={isPending || !name.trim()}
-              className="w-full py-3 rounded-xl bg-emerald-500 text-white font-semibold hover:bg-emerald-600 transition-colors disabled:opacity-50 active:scale-[0.98] flex items-center justify-center gap-2"
-            >
-              {isPending ? (
-                <span className="inline-flex items-center gap-2">
-                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Adding...
-                </span>
-              ) : (
-                <>
-                  <Check size={18} />
-                  Add Account
-                </>
-              )}
-            </button>
           </div>
         </div>
       )}

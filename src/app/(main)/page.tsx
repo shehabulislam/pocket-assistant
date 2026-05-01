@@ -34,6 +34,9 @@ export default async function HomePage({
     accounts,
     budgets,
     budgetExpenseTransactions,
+    categoriesWithCounts,
+    accountsWithCounts,
+    allGoals,
   ] = await Promise.all([
     // Home: transactions
     prisma.transaction.findMany({
@@ -62,7 +65,7 @@ export default async function HomePage({
         settings: true,
       },
     }),
-    // Home: goals
+    // Home: goals (top 5)
     prisma.goal.findMany({
       where: { userId },
       orderBy: [{ currentAmount: "desc" }, { name: "asc" }],
@@ -97,6 +100,23 @@ export default async function HomePage({
         date: { gte: startOfMonth, lte: endOfMonth },
       },
       select: { categoryId: true, amount: true },
+    }),
+    // Settings: all categories with transaction counts
+    prisma.category.findMany({
+      where: { userId },
+      orderBy: [{ type: "asc" }, { name: "asc" }],
+      include: { _count: { select: { transactions: true } } },
+    }),
+    // Settings: accounts with transaction counts
+    prisma.account.findMany({
+      where: { userId },
+      orderBy: { name: "asc" },
+      include: { _count: { select: { transactions: true } } },
+    }),
+    // Settings: all goals (no limit)
+    prisma.goal.findMany({
+      where: { userId },
+      orderBy: [{ currentAmount: "desc" }, { name: "asc" }],
     }),
   ]);
 
@@ -210,6 +230,10 @@ export default async function HomePage({
         role: "USER",
         settings: null,
       }))}
+      // Settings sub-views
+      categoriesWithCounts={JSON.parse(JSON.stringify(categoriesWithCounts))}
+      accountsWithCounts={JSON.parse(JSON.stringify(accountsWithCounts))}
+      allGoals={JSON.parse(JSON.stringify(allGoals))}
     />
   );
 }

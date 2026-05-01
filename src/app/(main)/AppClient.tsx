@@ -71,6 +71,24 @@ export interface UserSettings {
   } | null;
 }
 
+export interface CategoryWithCount {
+  id: string;
+  name: string;
+  icon: string | null;
+  color: string | null;
+  type: "INCOME" | "EXPENSE";
+  isDefault: boolean;
+  _count: { transactions: number };
+}
+
+export interface AccountWithCount {
+  id: string;
+  name: string;
+  type: "CASH" | "BANK" | "MOBILE_BANKING" | "CREDIT" | "INVESTMENT";
+  balance: number;
+  _count: { transactions: number };
+}
+
 export type ActiveTab = "home" | "reports" | "settings";
 
 interface AppClientProps {
@@ -100,6 +118,10 @@ interface AppClientProps {
   budgetMonthLabel: string;
   // Settings data
   user: UserSettings;
+  // Settings sub-views
+  categoriesWithCounts: CategoryWithCount[];
+  accountsWithCounts: AccountWithCount[];
+  allGoals: GoalItem[];
 }
 
 export default function AppClient(props: AppClientProps) {
@@ -143,7 +165,20 @@ export default function AppClient(props: AppClientProps) {
         </div>
 
         <div style={{ display: activeTab === "settings" ? "block" : "none" }}>
-          <SettingsTab user={props.user} />
+          <SettingsTab
+            user={props.user}
+            categoriesWithCounts={props.categoriesWithCounts}
+            accountsWithCounts={props.accountsWithCounts}
+            allGoals={props.allGoals}
+            currency={props.currency}
+            budgets={props.budgets}
+            expenseCategories={props.expenseCategories}
+            spendingByCategory={props.spendingByCategory}
+            totalBudget={props.totalBudget}
+            totalSpent={props.totalSpent}
+            currentBudgetMonth={props.currentBudgetMonth}
+            budgetMonthLabel={props.budgetMonthLabel}
+          />
         </div>
       </main>
 

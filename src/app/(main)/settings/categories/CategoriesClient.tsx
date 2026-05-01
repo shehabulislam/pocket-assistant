@@ -30,8 +30,10 @@ interface CategoryItem {
 
 export default function CategoriesClient({
   categories,
+  onBack,
 }: {
   categories: CategoryItem[];
+  onBack?: () => void;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -129,7 +131,7 @@ export default function CategoriesClient({
       <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-lg border-b border-gray-100">
         <div className="flex items-center justify-between px-4 py-3">
           <button
-            onClick={() => router.back()}
+            onClick={() => onBack ? onBack() : router.back()}
             className="p-1.5 rounded-full hover:bg-gray-100 transition-colors"
           >
             <ArrowLeft size={22} className="text-gray-700" />

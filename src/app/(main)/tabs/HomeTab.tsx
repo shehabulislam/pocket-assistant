@@ -13,6 +13,7 @@ import {
   Calendar,
   Check,
   X,
+  RefreshCw,
 } from "lucide-react";
 import { formatCurrency, formatSignedCurrency, getMonthName } from "@/lib/utils";
 import { createTransaction } from "../transaction/actions";
@@ -184,6 +185,13 @@ export default function HomeTab({
       <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-lg border-b border-gray-100">
         <div className="flex items-center justify-between px-4 py-3">
           <h1 className="text-lg font-bold text-gray-900">Pocket Assistant</h1>
+          <button
+            onClick={() => router.refresh()}
+            className="p-2 rounded-full hover:bg-gray-100 transition-colors active:scale-95"
+            id="refresh-btn"
+          >
+            <RefreshCw size={18} className="text-gray-500" />
+          </button>
         </div>
       </header>
 

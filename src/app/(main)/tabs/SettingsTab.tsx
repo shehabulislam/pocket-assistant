@@ -1,7 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import { signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import CategoriesClient from "../settings/categories/CategoriesClient";
+import AccountsClient from "../settings/accounts/AccountsClient";
+import BudgetsClient from "../budgets/BudgetsClient";
+import GoalsClient from "../goals/GoalsClient";
 import {
   Globe,
   DollarSign,
@@ -37,6 +42,8 @@ import {
   Target,
 } from "lucide-react";
 
+type SettingsView = "main" | "categories" | "accounts" | "budgets" | "goals";
+
 interface SettingsClientProps {
   user: {
     name: string | null;
@@ -53,6 +60,17 @@ interface SettingsClientProps {
       weeklySummary: boolean;
     } | null;
   };
+  categoriesWithCounts: any[];
+  accountsWithCounts: any[];
+  allGoals: any[];
+  currency: string;
+  budgets: any[];
+  expenseCategories: any[];
+  spendingByCategory: Record<string, number>;
+  totalBudget: number;
+  totalSpent: number;
+  currentBudgetMonth: string;
+  budgetMonthLabel: string;
 }
 
 function SettingsSection({
@@ -207,8 +225,10 @@ function CheckItem({
   );
 }
 
-export default function SettingsTab({ user }: SettingsClientProps) {
+export default function SettingsTab(props: SettingsClientProps) {
+  const { user } = props;
   const router = useRouter();
+  const [view, setView] = useState<SettingsView>("main");
   const initials = user.name
     ? user.name
         .split(" ")
@@ -218,6 +238,12 @@ export default function SettingsTab({ user }: SettingsClientProps) {
     : "U";
   
   const isSuperAdmin = user.role === "SUPERADMIN";
+
+  // Render sub-views inline
+  if (view === "categories") return <CategoriesClient categories={props.categoriesWithCounts} onBack={() => setView("main")} />;
+  if (view === "accounts") return <AccountsClient accounts={props.accountsWithCounts} onBack={() => setView("main")} />;
+  if (view === "budgets") return <BudgetsClient budgets={props.budgets} expenseCategories={props.expenseCategories} spendingByCategory={props.spendingByCategory} totalBudget={props.totalBudget} totalSpent={props.totalSpent} currency={props.currency} currentMonth={props.currentBudgetMonth} monthLabel={props.budgetMonthLabel} onBack={() => setView("main")} />;
+  if (view === "goals") return <GoalsClient goals={props.allGoals} currency={props.currency} onBack={() => setView("main")} />;
 
   return (
     <div className="animate-fadeIn">
@@ -290,7 +316,7 @@ export default function SettingsTab({ user }: SettingsClientProps) {
             icon={FolderOpen}
             iconBg="#F59E0B"
             label="Manage Categories"
-            onClick={() => router.push("/settings/categories")}
+            onClick={() => setView("categories")}
           />
 
           <SettingsItem
@@ -298,7 +324,7 @@ export default function SettingsTab({ user }: SettingsClientProps) {
             iconBg="#14B8A6"
             label="Manage Accounts"
             subtitle="bKash, Nagad, Bank, Cash"
-            onClick={() => router.push("/settings/accounts")}
+            onClick={() => setView("accounts")}
           />
           <SettingsItem
             icon={Upload}
@@ -315,14 +341,14 @@ export default function SettingsTab({ user }: SettingsClientProps) {
             iconBg="#6366F1"
             label="Budgets"
             subtitle="Set spending limits"
-            onClick={() => router.push("/budgets")}
+            onClick={() => setView("budgets")}
           />
           <SettingsItem
             icon={Target}
             iconBg="#F59E0B"
             label="Goals"
             subtitle="Track your savings goals"
-            onClick={() => router.push("/goals")}
+            onClick={() => setView("goals")}
           />
           <SettingsItem
             icon={Users}
