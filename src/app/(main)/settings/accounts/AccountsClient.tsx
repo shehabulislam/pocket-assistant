@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Plus, Trash2, X, Check } from "lucide-react";
-import { createAccount, deleteAccount } from "../actions";
+import { ArrowLeft, Plus, Trash2, X, Check, Receipt } from "lucide-react";
+import { createAccount, deleteAccount, getAccountTransactions } from "../actions";
+import { deleteTransaction } from "../../transaction/actions";
 import { formatCurrency } from "@/lib/utils";
 
 const ACCOUNT_TYPES = [
@@ -49,6 +50,19 @@ export default function AccountsClient({
 
   const totalBalance = accounts.reduce((sum, a) => sum + a.balance, 0);
 
+  // Account detail state
+  const [selectedAccount, setSelectedAccount] = useState<AccountItem | null>(null);
+  const [accountTxns, setAccountTxns] = useState<any[]>([]);
+  const [loadingTxns, setLoadingTxns] = useState(false);
+
+  const openAccountDetail = async (account: AccountItem) => {
+    setSelectedAccount(account);
+    setLoadingTxns(true);
+    const result = await getAccountTransactions(account.id);
+    setAccountTxns(result.transactions || []);
+    setLoadingTxns(false);
+  };
+
   const handleAdd = () => {
     if (!name.trim()) {
       setError("Please enter an account name");
@@ -85,6 +99,109 @@ export default function AccountsClient({
       }
     });
   };
+
+  // Account detail view
+  if (selectedAccount) {
+    const typeInfo = getTypeInfo(selectedAccount.type);
+    return (
+      <div className="animate-fadeIn">
+        <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-lg border-b border-gray-100">
+          <div className="flex items-center justify-between px-4 py-3">
+            <button
+              onClick={() => setSelectedAccount(null)}
+              className="p-1.5 rounded-full hover:bg-gray-100 transition-colors"
+            >
+              <ArrowLeft size={22} className="text-gray-700" />
+            </button>
+            <h1 className="text-lg font-bold text-gray-900">
+              {selectedAccount.name}
+            </h1>
+            <div className="w-8" />
+          </div>
+        </header>
+
+        {/* Account Summary */}
+        <div className="px-4 pt-4">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-4 flex items-center gap-3">
+            <div
+              className="w-11 h-11 rounded-xl flex items-center justify-center text-xl shrink-0"
+              style={{ backgroundColor: `${typeInfo.color}15` }}
+            >
+              {typeInfo.icon}
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-gray-900">{selectedAccount.name}</p>
+              <p className="text-xs text-gray-400">{typeInfo.label} · {selectedAccount._count.transactions} transactions</p>
+            </div>
+            <p className={`text-lg font-bold ${selectedAccount.balance >= 0 ? "text-emerald-600" : "text-red-500"}`}>
+              {formatCurrency(selectedAccount.balance, "BDT")}
+            </p>
+          </div>
+        </div>
+
+        {/* Transaction List */}
+        <div className="px-4 pb-8">
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+            Transactions
+          </p>
+
+          {loadingTxns ? (
+            <div className="flex items-center justify-center py-12">
+              <span className="w-6 h-6 border-2 border-gray-200 border-t-emerald-500 rounded-full animate-spin" />
+            </div>
+          ) : accountTxns.length === 0 ? (
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center">
+              <div className="w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center mx-auto mb-3">
+                <Receipt size={24} className="text-gray-400" />
+              </div>
+              <p className="text-sm font-medium text-gray-500">No transactions yet</p>
+              <p className="text-xs text-gray-400 mt-1">Transactions for this account will show here</p>
+            </div>
+          ) : (
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden divide-y divide-gray-50">
+              {accountTxns.map((txn: any) => (
+                <div key={txn.id} className="flex items-center gap-3 px-4 py-3">
+                  <span
+                    className="w-10 h-10 rounded-xl flex items-center justify-center text-lg shrink-0"
+                    style={{ backgroundColor: txn.category?.color ? `${txn.category.color}15` : "#f3f4f6" }}
+                  >
+                    {txn.category?.icon || "📦"}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">
+                      {txn.description || txn.category?.name || "Transaction"}
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      {new Date(txn.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                      {" · "}{txn.category?.name}
+                    </p>
+                  </div>
+                  <p className={`text-sm font-bold ${txn.type === "INCOME" ? "text-emerald-600" : "text-red-500"}`}>
+                    {txn.type === "INCOME" ? "+" : "-"}{formatCurrency(txn.amount, "BDT")}
+                  </p>
+                  <button
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      if (!confirm("Delete this transaction?")) return;
+                      startTransition(async () => {
+                        await deleteTransaction(txn.id);
+                        setAccountTxns((prev) => prev.filter((t: any) => t.id !== txn.id));
+                        router.refresh();
+                      });
+                    }}
+                    disabled={isPending}
+                    className="p-1 rounded-full hover:bg-red-50 transition-colors disabled:opacity-40 shrink-0"
+                  >
+                    <Trash2 size={14} className="text-gray-300 hover:text-red-400" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="animate-fadeIn">
@@ -137,9 +254,10 @@ export default function AccountsClient({
           {accounts.map((account) => {
             const typeInfo = getTypeInfo(account.type);
             return (
-              <div
+              <button
+                onClick={() => openAccountDetail(account)}
                 key={account.id}
-                className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 hover-lift"
+                className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 hover-lift cursor-pointer w-full text-left"
               >
                 <div className="flex items-center gap-3">
                   <div
@@ -179,7 +297,10 @@ export default function AccountsClient({
                       {formatCurrency(account.balance, "BDT")}
                     </p>
                     <button
-                      onClick={() => handleDelete(account.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(account.id);
+                      }}
                       disabled={isPending}
                       className="p-1.5 rounded-full hover:bg-red-50 transition-colors disabled:opacity-40"
                     >
@@ -190,7 +311,7 @@ export default function AccountsClient({
                     </button>
                   </div>
                 </div>
-              </div>
+              </button>
             );
           })}
         </div>

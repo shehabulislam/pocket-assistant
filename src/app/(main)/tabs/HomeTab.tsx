@@ -40,6 +40,7 @@ interface Account {
   id: string;
   name: string;
   type: string;
+  balance: number;
 }
 
 interface HomeTabProps {
@@ -85,8 +86,10 @@ export default function HomeTab({
 }: HomeTabProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const month = currentMonth;
   const year = currentYear;
+  const totalAccountBalance = accounts.reduce((sum, a) => sum + a.balance, 0);
   const netBalance = totalIncome - totalExpense;
 
   // Reminder dismiss state
@@ -195,11 +198,20 @@ export default function HomeTab({
         <div className="flex items-center justify-between px-4 py-3">
           <h1 className="text-lg font-bold text-gray-900">Pocket Assistant</h1>
           <button
-            onClick={() => router.refresh()}
+            onClick={() => {
+              setIsRefreshing(true);
+              router.refresh();
+              // Stop spinning after a delay (refresh is async, no callback)
+              setTimeout(() => setIsRefreshing(false), 2000);
+            }}
             className="p-2 rounded-full hover:bg-gray-100 transition-colors active:scale-95"
             id="refresh-btn"
+            disabled={isRefreshing}
           >
-            <RefreshCw size={18} className="text-gray-500" />
+            <RefreshCw
+              size={18}
+              className={`text-gray-500 transition-transform ${isRefreshing ? "animate-spin" : ""}`}
+            />
           </button>
         </div>
       </header>
@@ -250,7 +262,7 @@ export default function HomeTab({
           className="rounded-2xl p-6 text-white animate-scaleIn"
           style={{
             background:
-              netBalance <= 0
+              totalAccountBalance <= 0
                 ? "linear-gradient(135deg, #f87171 0%, #ef4444 50%, #dc2626 100%)"
                 : totalIncome > 0 && totalExpense > totalIncome * 0.75
                   ? "linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%)"
@@ -258,15 +270,15 @@ export default function HomeTab({
           }}
         >
           <p className="text-sm font-medium text-white/80 text-center">
-            Net Balance
+            Total Balance
           </p>
           <p className="text-3xl font-bold text-center mt-1 tracking-tight">
-            {netBalance < 0 ? `-${formatCurrency(Math.abs(netBalance), currency)}` : formatCurrency(netBalance, currency)}
+            {totalAccountBalance < 0 ? `-${formatCurrency(Math.abs(totalAccountBalance), currency)}` : formatCurrency(totalAccountBalance, currency)}
           </p>
           <div className="flex justify-between mt-5 pt-4 border-t border-white/20">
             <div className="text-center flex-1">
               <p className="text-xs text-white/70 uppercase tracking-wide">
-                Money In
+                This Month In
               </p>
               <p className="text-sm font-semibold mt-0.5">
                 {formatSignedCurrency(totalIncome, currency)}
@@ -274,7 +286,7 @@ export default function HomeTab({
             </div>
             <div className="text-center flex-1">
               <p className="text-xs text-white/70 uppercase tracking-wide">
-                Money Out
+                This Month Out
               </p>
               <p className="text-sm font-semibold mt-0.5">
                 -{formatCurrency(totalExpense, currency)}

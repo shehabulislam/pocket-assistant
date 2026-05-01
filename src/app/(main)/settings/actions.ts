@@ -163,3 +163,24 @@ export async function updateReminderSettings(data: {
     return { error: "Failed to update settings" };
   }
 }
+
+// ---- Account Transactions ----
+
+export async function getAccountTransactions(accountId: string) {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Unauthorized", transactions: [] };
+
+  try {
+    const transactions = await prisma.transaction.findMany({
+      where: { userId: session.user.id, accountId },
+      include: { category: true, account: true },
+      orderBy: { date: "desc" },
+      take: 100,
+    });
+
+    return { transactions: JSON.parse(JSON.stringify(transactions)) };
+  } catch (error) {
+    console.error("Get account transactions error:", error);
+    return { error: "Failed to load transactions", transactions: [] };
+  }
+}
