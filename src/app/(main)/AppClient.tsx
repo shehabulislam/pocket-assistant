@@ -103,6 +103,7 @@ interface AppClientProps {
   incomeCategories: Category[];
   expenseCategories: Category[];
   accounts: Account[];
+  hasTransactionsToday: boolean;
   // Reports data
   reportsTotalIncome: number;
   reportsTotalExpense: number;
@@ -144,6 +145,8 @@ export default function AppClient(props: AppClientProps) {
             incomeCategories={props.incomeCategories}
             expenseCategories={props.expenseCategories}
             accounts={props.accounts}
+            hasTransactionsToday={props.hasTransactionsToday}
+            dailyReminder={props.user.settings?.dailyReminder ?? false}
             budgets={props.budgets}
             spendingByCategory={props.spendingByCategory}
             totalBudget={props.totalBudget}

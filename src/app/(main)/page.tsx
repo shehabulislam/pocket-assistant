@@ -193,6 +193,12 @@ export default async function HomePage({
     year: "numeric",
   });
 
+  // Check if user has any transactions today (for reminder banner)
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const hasTransactionsToday = transactions.some(
+    (t) => new Date(t.date) >= todayStart
+  );
+
   return (
     <AppClient
       // Home
@@ -206,6 +212,7 @@ export default async function HomePage({
       incomeCategories={JSON.parse(JSON.stringify(incomeCategories))}
       expenseCategories={JSON.parse(JSON.stringify(expenseCategories))}
       accounts={JSON.parse(JSON.stringify(accounts))}
+      hasTransactionsToday={hasTransactionsToday}
       // Reports
       reportsTotalIncome={totalIncome}
       reportsTotalExpense={totalExpense}

@@ -131,3 +131,35 @@ export async function deleteAccount(id: string) {
     return { error: "Failed to delete account" };
   }
 }
+
+// ---- Reminder Settings Actions ----
+
+export async function updateReminderSettings(data: {
+  pushNotifications?: boolean;
+  dailyReminder?: boolean;
+  reminderTime?: string;
+  weeklySummary?: boolean;
+}) {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Unauthorized" };
+
+  try {
+    await prisma.settings.upsert({
+      where: { userId: session.user.id },
+      create: {
+        userId: session.user.id,
+        pushNotifications: data.pushNotifications ?? true,
+        dailyReminder: data.dailyReminder ?? false,
+        reminderTime: data.reminderTime ?? "20:00",
+        weeklySummary: data.weeklySummary ?? false,
+      },
+      update: data,
+    });
+
+    revalidatePath("/");
+    return { success: true };
+  } catch (error) {
+    console.error("Update settings error:", error);
+    return { error: "Failed to update settings" };
+  }
+}

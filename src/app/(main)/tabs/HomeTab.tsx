@@ -14,6 +14,7 @@ import {
   Check,
   X,
   RefreshCw,
+  Bell,
 } from "lucide-react";
 import { formatCurrency, formatSignedCurrency, getMonthName } from "@/lib/utils";
 import { createTransaction } from "../transaction/actions";
@@ -58,6 +59,8 @@ interface HomeTabProps {
   totalSpent: number;
   currentBudgetMonth: string;
   budgetMonthLabel: string;
+  hasTransactionsToday: boolean;
+  dailyReminder: boolean;
 }
 
 export default function HomeTab({
@@ -77,12 +80,18 @@ export default function HomeTab({
   totalSpent,
   currentBudgetMonth,
   budgetMonthLabel,
+  hasTransactionsToday,
+  dailyReminder,
 }: HomeTabProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const month = currentMonth;
   const year = currentYear;
   const netBalance = totalIncome - totalExpense;
+
+  // Reminder dismiss state
+  const [reminderDismissed, setReminderDismissed] = useState(false);
+  const showReminder = dailyReminder && !hasTransactionsToday && !reminderDismissed;
 
   // Transaction modal state
   const [showModal, setShowModal] = useState<"INCOME" | "EXPENSE" | null>(null);
@@ -194,6 +203,25 @@ export default function HomeTab({
           </button>
         </div>
       </header>
+
+      {/* Daily Reminder Banner */}
+      {showReminder && (
+        <div className="mx-4 mt-3 flex items-center gap-3 px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl animate-fadeIn">
+          <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center shrink-0">
+            <Bell size={16} className="text-amber-600" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-amber-800">Daily Reminder</p>
+            <p className="text-xs text-amber-600">You haven&apos;t logged any transactions today</p>
+          </div>
+          <button
+            onClick={() => setReminderDismissed(true)}
+            className="p-1 rounded-full hover:bg-amber-100 shrink-0"
+          >
+            <X size={16} className="text-amber-400" />
+          </button>
+        </div>
+      )}
 
       {/* Month Navigator */}
       <div className="flex items-center justify-center gap-4 py-3 px-4">

@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import CategoriesClient from "../settings/categories/CategoriesClient";
 import AccountsClient from "../settings/accounts/AccountsClient";
 import BudgetsClient from "../budgets/BudgetsClient";
 import GoalsClient from "../goals/GoalsClient";
+import { updateReminderSettings } from "../settings/actions";
 import {
   Globe,
   DollarSign,
@@ -143,15 +144,20 @@ function ToggleItem({
   label,
   subtitle,
   checked,
+  onToggle,
 }: {
   icon: React.ElementType;
   iconBg: string;
   label: string;
   subtitle?: string;
   checked: boolean;
+  onToggle?: () => void;
 }) {
   return (
-    <div className="flex items-center gap-3 px-4 py-3.5">
+    <button
+      onClick={onToggle}
+      className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-gray-50 transition-colors text-left"
+    >
       <div
         className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
         style={{ backgroundColor: iconBg }}
@@ -175,7 +181,7 @@ function ToggleItem({
           }`}
         />
       </div>
-    </div>
+    </button>
   );
 }
 
@@ -229,6 +235,13 @@ export default function SettingsTab(props: SettingsClientProps) {
   const { user } = props;
   const router = useRouter();
   const [view, setView] = useState<SettingsView>("main");
+  const [, startTransition] = useTransition();
+
+  // Local toggle state for instant UI feedback
+  const [pushNotifications, setPushNotifications] = useState(user.settings?.pushNotifications ?? true);
+  const [dailyReminder, setDailyReminder] = useState(user.settings?.dailyReminder ?? false);
+  const [weeklySummary, setWeeklySummary] = useState(user.settings?.weeklySummary ?? false);
+
   const initials = user.name
     ? user.name
         .split(" ")
@@ -391,7 +404,16 @@ export default function SettingsTab(props: SettingsClientProps) {
             iconBg="#F59E0B"
             label="Push Notifications"
             subtitle="Reminders to track expenses"
-            checked={user.settings?.pushNotifications ?? true}
+            checked={pushNotifications}
+            onToggle={() => {
+              const next = !pushNotifications;
+              setPushNotifications(next);
+              startTransition(async () => { await updateReminderSettings({ pushNotifications: next }); });
+              // Request browser notification permission when enabled
+              if (next && typeof Notification !== "undefined" && Notification.permission === "default") {
+                Notification.requestPermission();
+              }
+            }}
           />
         </SettingsSection>
 
@@ -402,14 +424,24 @@ export default function SettingsTab(props: SettingsClientProps) {
             iconBg="#10B981"
             label="Daily Reminder"
             subtitle="Remind me to track spending"
-            checked={user.settings?.dailyReminder ?? false}
+            checked={dailyReminder}
+            onToggle={() => {
+              const next = !dailyReminder;
+              setDailyReminder(next);
+              startTransition(async () => { await updateReminderSettings({ dailyReminder: next }); });
+            }}
           />
           <ToggleItem
             icon={Mail}
             iconBg="#6B7280"
             label="Weekly Summary"
             subtitle="Every Sunday at 10:00 AM"
-            checked={user.settings?.weeklySummary ?? false}
+            checked={weeklySummary}
+            onToggle={() => {
+              const next = !weeklySummary;
+              setWeeklySummary(next);
+              startTransition(async () => { await updateReminderSettings({ weeklySummary: next }); });
+            }}
           />
         </SettingsSection>
 
