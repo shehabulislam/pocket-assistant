@@ -284,9 +284,10 @@ export default function BudgetsClient({
 
       {/* Add Budget Modal */}
       {showAdd && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 animate-fadeIn">
-          <div className="bg-white rounded-t-3xl sm:rounded-2xl w-full max-w-md p-6 animate-slideUp shadow-xl">
-            <div className="flex items-center justify-between mb-5">
+        <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/40 animate-fadeIn">
+          <div className="bg-white rounded-t-3xl sm:rounded-2xl w-full max-w-md shadow-xl animate-slideUp max-h-[92vh] flex flex-col">
+            {/* Modal Header */}
+            <div className="shrink-0 flex items-center justify-between px-6 pt-6 pb-3">
               <h3 className="text-lg font-bold text-gray-900">
                 Set Budget
               </h3>
@@ -298,94 +299,100 @@ export default function BudgetsClient({
               </button>
             </div>
 
-            {error && (
-              <div className="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-xl border border-red-100 mb-4 animate-shake">
-                {error}
-              </div>
-            )}
+            {/* Scrollable Content */}
+            <div className="flex-1 overflow-y-auto px-6">
+              {error && (
+                <div className="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-xl border border-red-100 mb-4 animate-shake">
+                  {error}
+                </div>
+              )}
 
-            {/* Category Selector */}
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-              Category
-            </p>
-            {expenseCategories.length === 0 ? (
-              <p className="text-sm text-gray-400 mb-4">
-                No expense categories found. Add categories first.
+              {/* Category Selector */}
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                Category
               </p>
-            ) : (
-              <div className="grid grid-cols-3 gap-2 mb-4 max-h-48 overflow-y-auto">
-                {expenseCategories.map((cat) => {
-                  const existingBudget = budgetByCategoryId.get(cat.id);
-                  return (
-                    <button
-                      key={cat.id}
-                      onClick={() => {
-                        setSelectedCategoryId(cat.id);
-                        if (existingBudget) {
-                          setLimitAmount(String(existingBudget.limit));
-                        }
-                      }}
-                      className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all relative ${
-                        selectedCategoryId === cat.id
-                          ? "bg-emerald-50 border-2 border-emerald-400"
-                          : "border-gray-100 hover:bg-gray-50"
-                      }`}
-                    >
-                      <span
-                        className="w-9 h-9 rounded-lg flex items-center justify-center text-base"
-                        style={{
-                          backgroundColor: cat.color
-                            ? `${cat.color}15`
-                            : "#f3f4f6",
+              {expenseCategories.length === 0 ? (
+                <p className="text-sm text-gray-400 mb-4">
+                  No expense categories found. Add categories first.
+                </p>
+              ) : (
+                <div className="grid grid-cols-3 gap-2 mb-4">
+                  {expenseCategories.map((cat) => {
+                    const existingBudget = budgetByCategoryId.get(cat.id);
+                    return (
+                      <button
+                        key={cat.id}
+                        onClick={() => {
+                          setSelectedCategoryId(cat.id);
+                          if (existingBudget) {
+                            setLimitAmount(String(existingBudget.limit));
+                          }
                         }}
+                        className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all relative ${
+                          selectedCategoryId === cat.id
+                            ? "bg-emerald-50 border-2 border-emerald-400"
+                            : "border-gray-100 hover:bg-gray-50"
+                        }`}
                       >
-                        {cat.icon || "📦"}
-                      </span>
-                      <span className="text-[10px] font-medium text-gray-600 text-center leading-tight">
-                        {cat.name}
-                      </span>
-                      {existingBudget && (
-                        <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-emerald-400" />
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+                        <span
+                          className="w-9 h-9 rounded-lg flex items-center justify-center text-base"
+                          style={{
+                            backgroundColor: cat.color
+                              ? `${cat.color}15`
+                              : "#f3f4f6",
+                          }}
+                        >
+                          {cat.icon || "📦"}
+                        </span>
+                        <span className="text-[10px] font-medium text-gray-600 text-center leading-tight">
+                          {cat.name}
+                        </span>
+                        {existingBudget && (
+                          <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-emerald-400" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
 
-            {/* Limit Amount */}
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-              Monthly Limit
-            </p>
-            <div className="flex items-center gap-2 mb-5">
-              <span className="text-lg font-bold text-gray-400">৳</span>
-              <input
-                type="number"
-                inputMode="decimal"
-                value={limitAmount}
-                onChange={(e) => setLimitAmount(e.target.value)}
-                placeholder="5,000"
-                className="flex-1 px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-lg font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
-              />
+              {/* Limit Amount */}
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                Monthly Limit
+              </p>
+              <div className="flex items-center gap-2">
+                <span className="text-lg font-bold text-gray-400">৳</span>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  value={limitAmount}
+                  onChange={(e) => setLimitAmount(e.target.value)}
+                  placeholder="5,000"
+                  className="flex-1 px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-lg font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
+                />
+              </div>
             </div>
 
-            <button
-              onClick={handleAdd}
-              disabled={isPending || !selectedCategoryId || !limitAmount}
-              className="w-full py-3 rounded-xl bg-emerald-500 text-white font-semibold hover:bg-emerald-600 transition-colors disabled:opacity-50 active:scale-[0.98] flex items-center justify-center gap-2"
-            >
-              {isPending ? (
-                <span className="inline-flex items-center gap-2">
-                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Saving...
-                </span>
-              ) : (
-                <>
-                  <Check size={18} />
-                  Set Budget
-                </>
-              )}
-            </button>
+            {/* Submit - pinned at bottom */}
+            <div className="shrink-0 px-6 pt-3 pb-4 border-t border-gray-100 bg-white rounded-b-2xl" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
+              <button
+                onClick={handleAdd}
+                disabled={isPending || !selectedCategoryId || !limitAmount}
+                className="w-full py-3 rounded-xl bg-emerald-500 text-white font-semibold hover:bg-emerald-600 transition-colors disabled:opacity-50 active:scale-[0.98] flex items-center justify-center gap-2"
+              >
+                {isPending ? (
+                  <span className="inline-flex items-center gap-2">
+                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Saving...
+                  </span>
+                ) : (
+                  <>
+                    <Check size={18} />
+                    Set Budget
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}
