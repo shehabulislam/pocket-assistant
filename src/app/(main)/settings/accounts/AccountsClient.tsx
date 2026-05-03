@@ -2,8 +2,8 @@
 
 import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Plus, Trash2, X, Check, Receipt } from "lucide-react";
-import { createAccount, deleteAccount, getAccountTransactions } from "../actions";
+import { ArrowLeft, Plus, Trash2, X, Check, Receipt, ArrowRightLeft } from "lucide-react";
+import { createAccount, deleteAccount, getAccountTransactions, transferBalance } from "../actions";
 import { deleteTransaction } from "../../transaction/actions";
 import { formatCurrency } from "@/lib/utils";
 
@@ -55,6 +55,13 @@ export default function AccountsClient({
   const [accountTxns, setAccountTxns] = useState<any[]>([]);
   const [loadingTxns, setLoadingTxns] = useState(false);
 
+  // Transfer state
+  const [showTransfer, setShowTransfer] = useState(false);
+  const [transferFrom, setTransferFrom] = useState(accounts[0]?.id || "");
+  const [transferTo, setTransferTo] = useState(accounts[1]?.id || "");
+  const [transferAmount, setTransferAmount] = useState("");
+  const [transferError, setTransferError] = useState("");
+
   const openAccountDetail = async (account: AccountItem) => {
     setSelectedAccount(account);
     setLoadingTxns(true);
@@ -95,6 +102,39 @@ export default function AccountsClient({
         setError(result.error);
         setTimeout(() => setError(""), 3000);
       } else {
+        router.refresh();
+      }
+    });
+  };
+
+  const openTransferModal = () => {
+    setShowTransfer(true);
+    setTransferFrom(accounts[0]?.id || "");
+    setTransferTo(accounts[1]?.id || accounts[0]?.id || "");
+    setTransferAmount("");
+    setTransferError("");
+  };
+
+  const handleTransfer = () => {
+    if (!transferAmount || parseFloat(transferAmount) <= 0) {
+      setTransferError("Please enter a valid amount");
+      return;
+    }
+    if (transferFrom === transferTo) {
+      setTransferError("Select different accounts");
+      return;
+    }
+    setTransferError("");
+    startTransition(async () => {
+      const result = await transferBalance({
+        fromAccountId: transferFrom,
+        toAccountId: transferTo,
+        amount: parseFloat(transferAmount),
+      });
+      if (result.error) {
+        setTransferError(result.error);
+      } else {
+        setShowTransfer(false);
         router.refresh();
       }
     });
@@ -217,15 +257,26 @@ export default function AccountsClient({
           <h1 className="text-lg font-bold text-gray-900">
             Manage Accounts
           </h1>
-          <button
-            onClick={() => {
-              setShowAdd(true);
-              setError("");
-            }}
-            className="p-1.5 rounded-full bg-emerald-50 hover:bg-emerald-100 transition-colors"
-          >
-            <Plus size={20} className="text-emerald-600" />
-          </button>
+          <div className="flex items-center gap-1.5">
+            {accounts.length >= 2 && (
+              <button
+                onClick={openTransferModal}
+                className="p-1.5 rounded-full bg-blue-50 hover:bg-blue-100 transition-colors"
+                id="transfer-btn"
+              >
+                <ArrowRightLeft size={20} className="text-blue-600" />
+              </button>
+            )}
+            <button
+              onClick={() => {
+                setShowAdd(true);
+                setError("");
+              }}
+              className="p-1.5 rounded-full bg-emerald-50 hover:bg-emerald-100 transition-colors"
+            >
+              <Plus size={20} className="text-emerald-600" />
+            </button>
+          </div>
         </div>
       </header>
 
@@ -427,6 +478,169 @@ export default function AccountsClient({
                   <>
                     <Check size={18} />
                     Add Account
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Transfer Balance Modal */}
+      {showTransfer && (
+        <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/40 animate-fadeIn">
+          <div className="bg-white rounded-t-3xl sm:rounded-2xl w-full max-w-md shadow-xl animate-slideUp max-h-[92vh] flex flex-col">
+            {/* Modal Header */}
+            <div
+              className="shrink-0 rounded-t-3xl sm:rounded-t-2xl border-b px-4 py-3 flex items-center justify-between"
+              style={{ backgroundColor: '#3b82f608', borderColor: '#3b82f620' }}
+            >
+              <h3 className="text-lg font-bold text-gray-900">
+                Transfer Balance
+              </h3>
+              <button
+                onClick={() => setShowTransfer(false)}
+                className="p-1 rounded-full hover:bg-gray-100"
+              >
+                <X size={20} className="text-gray-400" />
+              </button>
+            </div>
+
+            {/* Scrollable content */}
+            <div className="flex-1 overflow-y-auto">
+              {/* Amount */}
+              <div className="px-4 pt-6 pb-4 text-center">
+                <p className="text-xs font-medium text-gray-500 mb-2">Amount</p>
+                <div className="flex items-center justify-center gap-1">
+                  <span className="text-3xl font-bold text-blue-600">৳</span>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    value={transferAmount}
+                    onChange={(e) => setTransferAmount(e.target.value)}
+                    placeholder="0.00"
+                    className="text-3xl font-bold text-blue-600 bg-transparent border-none outline-none text-center w-44 placeholder-gray-300"
+                    autoFocus
+                  />
+                </div>
+                {transferAmount && parseFloat(transferAmount) > 0 && (
+                  <p className="text-xs text-gray-400 mt-1">
+                    {formatCurrency(parseFloat(transferAmount), "BDT")}
+                  </p>
+                )}
+              </div>
+
+              {/* Form Fields */}
+              <div className="px-4 pb-4">
+                {transferError && (
+                  <div className="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-xl border border-red-100 mb-4 animate-shake">
+                    {transferError}
+                  </div>
+                )}
+
+                {/* From Account */}
+                <div className="mb-4">
+                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                    From
+                  </label>
+                  <div className="flex gap-2 flex-wrap">
+                    {accounts.map((acc) => {
+                      const info = getTypeInfo(acc.type);
+                      return (
+                        <button
+                          key={acc.id}
+                          onClick={() => setTransferFrom(acc.id)}
+                          className={`px-3.5 py-2 rounded-xl text-sm font-medium border transition-all flex items-center gap-2 ${
+                            transferFrom === acc.id
+                              ? "bg-blue-50 text-blue-600 border-2 border-blue-400"
+                              : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100"
+                          }`}
+                        >
+                          <span className="text-base">{info.icon}</span>
+                          <span>{acc.name}</span>
+                          <span className="text-[10px] text-gray-400 font-normal">
+                            {formatCurrency(acc.balance, "BDT")}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Arrow Indicator */}
+                <div className="flex justify-center my-1">
+                  <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center">
+                    <ArrowRightLeft size={16} className="text-blue-500 rotate-90" />
+                  </div>
+                </div>
+
+                {/* To Account */}
+                <div className="mb-4">
+                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                    To
+                  </label>
+                  <div className="flex gap-2 flex-wrap">
+                    {accounts
+                      .filter((acc) => acc.id !== transferFrom)
+                      .map((acc) => {
+                        const info = getTypeInfo(acc.type);
+                        return (
+                          <button
+                            key={acc.id}
+                            onClick={() => setTransferTo(acc.id)}
+                            className={`px-3.5 py-2 rounded-xl text-sm font-medium border transition-all flex items-center gap-2 ${
+                              transferTo === acc.id
+                                ? "bg-blue-50 text-blue-600 border-2 border-blue-400"
+                                : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100"
+                            }`}
+                          >
+                            <span className="text-base">{info.icon}</span>
+                            <span>{acc.name}</span>
+                            <span className="text-[10px] text-gray-400 font-normal">
+                              {formatCurrency(acc.balance, "BDT")}
+                            </span>
+                          </button>
+                        );
+                      })}
+                  </div>
+                </div>
+
+                {/* Transfer Summary Preview */}
+                {transferFrom && transferTo && transferAmount && parseFloat(transferAmount) > 0 && (
+                  <div className="bg-blue-50 rounded-xl p-3 border border-blue-100">
+                    <p className="text-xs text-blue-600 text-center">
+                      <span className="font-semibold">{accounts.find(a => a.id === transferFrom)?.name}</span>
+                      {" → "}
+                      <span className="font-semibold">{accounts.find(a => a.id === transferTo)?.name}</span>
+                    </p>
+                    <p className="text-center text-sm font-bold text-blue-700 mt-1">
+                      {formatCurrency(parseFloat(transferAmount), "BDT")}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Submit - pinned at bottom */}
+            <div className="shrink-0 px-4 pt-3 pb-4 border-t border-gray-100 bg-white rounded-b-2xl" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
+              <button
+                onClick={handleTransfer}
+                disabled={isPending || !transferAmount || !transferFrom || !transferTo || transferFrom === transferTo}
+                className="w-full py-3 px-4 rounded-xl text-white font-semibold shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] flex items-center justify-center gap-2"
+                style={{
+                  background: 'linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%)',
+                  boxShadow: '0 8px 24px rgba(59, 130, 246, 0.3)',
+                }}
+              >
+                {isPending ? (
+                  <span className="inline-flex items-center gap-2">
+                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Transferring...
+                  </span>
+                ) : (
+                  <>
+                    <ArrowRightLeft size={18} />
+                    Transfer
                   </>
                 )}
               </button>

@@ -184,3 +184,62 @@ export async function getAccountTransactions(accountId: string) {
     return { error: "Failed to load transactions", transactions: [] };
   }
 }
+
+// ---- Transfer Balance Between Accounts ----
+
+export async function transferBalance(data: {
+  fromAccountId: string;
+  toAccountId: string;
+  amount: number;
+}) {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Unauthorized" };
+
+  if (data.fromAccountId === data.toAccountId) {
+    return { error: "Cannot transfer to the same account" };
+  }
+
+  if (data.amount <= 0) {
+    return { error: "Amount must be greater than 0" };
+  }
+
+  try {
+    // Verify both accounts belong to user
+    const [fromAccount, toAccount] = await Promise.all([
+      prisma.account.findFirst({
+        where: { id: data.fromAccountId, userId: session.user.id },
+      }),
+      prisma.account.findFirst({
+        where: { id: data.toAccountId, userId: session.user.id },
+      }),
+    ]);
+
+    if (!fromAccount || !toAccount) {
+      return { error: "Account not found" };
+    }
+
+    if (fromAccount.balance < data.amount) {
+      return { error: "Insufficient balance in source account" };
+    }
+
+    // Atomic transfer using Prisma transaction
+    await prisma.$transaction([
+      prisma.account.update({
+        where: { id: data.fromAccountId },
+        data: { balance: { decrement: data.amount } },
+      }),
+      prisma.account.update({
+        where: { id: data.toAccountId },
+        data: { balance: { increment: data.amount } },
+      }),
+    ]);
+
+    revalidatePath("/settings/accounts");
+    revalidatePath("/");
+    return { success: true };
+  } catch (error) {
+    console.error("Transfer balance error:", error);
+    return { error: "Failed to transfer balance" };
+  }
+}
+
