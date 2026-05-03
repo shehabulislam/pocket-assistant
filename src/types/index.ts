@@ -1,4 +1,4 @@
-export type TransactionType = "INCOME" | "EXPENSE";
+export type TransactionType = "INCOME" | "EXPENSE" | "TRANSFER";
 export type CategoryType = "INCOME" | "EXPENSE";
 export type AccountType = "CASH" | "BANK" | "MOBILE_BANKING" | "CREDIT" | "INVESTMENT";
 export type ViewPeriod = "monthly" | "weekly" | "yearly";
@@ -21,7 +21,7 @@ export interface TransactionWithCategory {
     icon: string | null;
     color: string | null;
     type: CategoryType;
-  };
+  } | null;
   account: {
     id: string;
     name: string;

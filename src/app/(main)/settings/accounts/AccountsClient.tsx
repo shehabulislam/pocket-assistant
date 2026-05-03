@@ -199,25 +199,33 @@ export default function AccountsClient({
             </div>
           ) : (
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden divide-y divide-gray-50">
-              {accountTxns.map((txn: any) => (
+              {accountTxns.map((txn: any) => {
+                const isTransfer = txn.type === "TRANSFER";
+                const specialIcon = "⇌";
+                const specialColor = "#3B82F6";
+                const specialLabel = "Transfer";
+                const isPositive = txn.type === "INCOME"
+                  || (isTransfer && txn.description?.startsWith("Transfer from"));
+
+                return (
                 <div key={txn.id} className="flex items-center gap-3 px-4 py-3">
                   <span
                     className="w-10 h-10 rounded-xl flex items-center justify-center text-lg shrink-0"
-                    style={{ backgroundColor: txn.category?.color ? `${txn.category.color}15` : "#f3f4f6" }}
+                    style={{ backgroundColor: isTransfer ? `${specialColor}15` : (txn.category?.color ? `${txn.category.color}15` : "#f3f4f6") }}
                   >
-                    {txn.category?.icon || "📦"}
+                    {isTransfer ? specialIcon : (txn.category?.icon || "📦")}
                   </span>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-900 truncate">
-                      {txn.description || txn.category?.name || "Transaction"}
+                      {txn.description || (isTransfer ? specialLabel : txn.category?.name) || "Transaction"}
                     </p>
                     <p className="text-xs text-gray-400">
                       {new Date(txn.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                      {" · "}{txn.category?.name}
+                      {" · "}{isTransfer ? specialLabel : txn.category?.name}
                     </p>
                   </div>
-                  <p className={`text-sm font-bold ${txn.type === "INCOME" ? "text-emerald-600" : "text-red-500"}`}>
-                    {txn.type === "INCOME" ? "+" : "-"}{formatCurrency(txn.amount, "BDT")}
+                  <p className={`text-sm font-bold ${isPositive ? "text-emerald-600" : isTransfer ? "text-blue-500" : "text-red-500"}`}>
+                    {isPositive ? "+" : isTransfer ? "-" : "-"}{formatCurrency(txn.amount, "BDT")}
                   </p>
                   <button
                     onClick={async (e) => {
@@ -235,7 +243,8 @@ export default function AccountsClient({
                     <Trash2 size={14} className="text-gray-300 hover:text-red-400" />
                   </button>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

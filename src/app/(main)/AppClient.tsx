@@ -90,6 +90,18 @@ export interface AccountWithCount {
   _count: { transactions: number };
 }
 
+export interface LoanItem {
+  id: string;
+  type: "GIVEN" | "TAKEN";
+  personName: string;
+  amount: number;
+  remainingAmount: number;
+  description: string | null;
+  deadline: string | null;
+  isSettled: boolean;
+  createdAt: string;
+}
+
 export type ActiveTab = "home" | "reports" | "settings";
 
 interface AppClientProps {
@@ -124,6 +136,7 @@ interface AppClientProps {
   categoriesWithCounts: CategoryWithCount[];
   accountsWithCounts: AccountWithCount[];
   allGoals: GoalItem[];
+  allLoans: LoanItem[];
 }
 
 export default function AppClient(props: AppClientProps) {
@@ -165,6 +178,7 @@ export default function AppClient(props: AppClientProps) {
             dailyData={props.dailyData}
             currency={props.currency}
             monthLabel={props.monthLabel}
+            loans={props.allLoans}
           />
         </div>
 
@@ -182,6 +196,7 @@ export default function AppClient(props: AppClientProps) {
             totalSpent={props.totalSpent}
             currentBudgetMonth={props.currentBudgetMonth}
             budgetMonthLabel={props.budgetMonthLabel}
+            allLoans={props.allLoans}
           />
         </div>
       </main>

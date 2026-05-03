@@ -7,6 +7,7 @@ import CategoriesClient from "../settings/categories/CategoriesClient";
 import AccountsClient from "../settings/accounts/AccountsClient";
 import BudgetsClient from "../budgets/BudgetsClient";
 import GoalsClient from "../goals/GoalsClient";
+import LoansClient from "../loans/LoansClient";
 import { updateReminderSettings } from "../settings/actions";
 import {
   Globe,
@@ -41,9 +42,10 @@ import {
   ChevronRight,
   Landmark,
   Target,
+  HandCoins,
 } from "lucide-react";
 
-type SettingsView = "main" | "categories" | "accounts" | "budgets" | "goals";
+type SettingsView = "main" | "categories" | "accounts" | "budgets" | "goals" | "loans";
 
 interface SettingsClientProps {
   user: {
@@ -72,6 +74,7 @@ interface SettingsClientProps {
   totalSpent: number;
   currentBudgetMonth: string;
   budgetMonthLabel: string;
+  allLoans: any[];
 }
 
 function SettingsSection({
@@ -257,6 +260,7 @@ export default function SettingsTab(props: SettingsClientProps) {
   if (view === "accounts") return <AccountsClient accounts={props.accountsWithCounts} onBack={() => setView("main")} />;
   if (view === "budgets") return <BudgetsClient budgets={props.budgets} expenseCategories={props.expenseCategories} spendingByCategory={props.spendingByCategory} totalBudget={props.totalBudget} totalSpent={props.totalSpent} currency={props.currency} currentMonth={props.currentBudgetMonth} monthLabel={props.budgetMonthLabel} onBack={() => setView("main")} />;
   if (view === "goals") return <GoalsClient goals={props.allGoals} currency={props.currency} onBack={() => setView("main")} />;
+  if (view === "loans") return <LoansClient loans={props.allLoans} currency={props.currency} onBack={() => setView("main")} />;
 
   return (
     <div className="animate-fadeIn">
@@ -394,6 +398,13 @@ export default function SettingsTab(props: SettingsClientProps) {
             subtitle="Organize transactions"
             locked={!isSuperAdmin}
             onClick={() => !isSuperAdmin ? null : router.push("/tags")}
+          />
+          <SettingsItem
+            icon={HandCoins}
+            iconBg="#06B6D4"
+            label="Loans"
+            subtitle="Track money given & taken"
+            onClick={() => setView("loans")}
           />
         </SettingsSection>
 

@@ -222,7 +222,9 @@ export async function transferBalance(data: {
       return { error: "Insufficient balance in source account" };
     }
 
-    // Atomic transfer using Prisma transaction
+    const now = new Date();
+
+    // Atomic transfer: update balances + create transaction records
     await prisma.$transaction([
       prisma.account.update({
         where: { id: data.fromAccountId },
@@ -231,6 +233,28 @@ export async function transferBalance(data: {
       prisma.account.update({
         where: { id: data.toAccountId },
         data: { balance: { increment: data.amount } },
+      }),
+      // Transaction record for source account (money out)
+      prisma.transaction.create({
+        data: {
+          amount: data.amount,
+          type: "TRANSFER",
+          description: `Transfer to ${toAccount.name}`,
+          accountId: data.fromAccountId,
+          userId: session.user.id,
+          date: now,
+        },
+      }),
+      // Transaction record for destination account (money in)
+      prisma.transaction.create({
+        data: {
+          amount: data.amount,
+          type: "TRANSFER",
+          description: `Transfer from ${fromAccount.name}`,
+          accountId: data.toAccountId,
+          userId: session.user.id,
+          date: now,
+        },
       }),
     ]);
 

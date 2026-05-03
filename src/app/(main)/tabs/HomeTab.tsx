@@ -430,7 +430,13 @@ export default function HomeTab({
                     <p className="text-xs font-medium text-gray-400 uppercase tracking-wide px-4 pt-3 pb-1">
                       {dateLabel}
                     </p>
-                    {txns.map((txn, idx) => (
+                    {txns.map((txn, idx) => {
+                      const isTransfer = txn.type === "TRANSFER";
+                      const specialIcon = "⇌";
+                      const specialColor = "#3B82F6";
+                      const specialName = "Transfer";
+
+                      return (
                       <Link
                         key={txn.id}
                         href={`/transaction/${txn.id}`}
@@ -441,19 +447,20 @@ export default function HomeTab({
                         <div
                           className="w-10 h-10 rounded-xl flex items-center justify-center text-lg shrink-0"
                           style={{
-                            backgroundColor:
-                              txn.category.color
+                            backgroundColor: isTransfer
+                              ? `${specialColor}15`
+                              : txn.category?.color
                                 ? `${txn.category.color}15`
                                 : "#f3f4f6",
                           }}
                         >
-                          {txn.category.icon || "📦"}
+                          {isTransfer ? specialIcon : (txn.category?.icon || "📦")}
                         </div>
 
                         {/* Details */}
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-gray-900 truncate">
-                            {txn.category.name}
+                            {isTransfer ? specialName : (txn.category?.name || "Transaction")}
                           </p>
                           {txn.description && (
                             <p className="text-xs text-gray-400 truncate">
@@ -467,14 +474,17 @@ export default function HomeTab({
                           className={`text-sm font-semibold ${
                             txn.type === "INCOME"
                               ? "text-emerald-500"
-                              : "text-red-500"
+                              : txn.type === "TRANSFER"
+                                ? "text-blue-500"
+                                : "text-red-500"
                           }`}
                         >
-                          {txn.type === "INCOME" ? "+" : "-"}
+                          {txn.type === "INCOME" ? "+" : txn.type === "TRANSFER" ? "" : "-"}
                           {formatCurrency(txn.amount, currency)}
                         </p>
                       </Link>
-                    ))}
+                    );
+                    })}
                   </div>
                 )
               )}

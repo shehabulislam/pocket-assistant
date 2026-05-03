@@ -13,7 +13,7 @@ import {
   CartesianGrid,
   Tooltip,
 } from "recharts";
-import { TrendingUp, TrendingDown, Wallet } from "lucide-react";
+import { TrendingUp, TrendingDown, Wallet, ArrowUpRight, ArrowDownLeft, HandCoins } from "lucide-react";
 
 interface CategoryBreakdown {
   name: string;
@@ -35,6 +35,19 @@ interface ReportsClientProps {
   dailyData: DailyData[];
   currency: string;
   monthLabel: string;
+  loans: LoanItem[];
+}
+
+interface LoanItem {
+  id: string;
+  type: "GIVEN" | "TAKEN";
+  personName: string;
+  amount: number;
+  remainingAmount: number;
+  description: string | null;
+  deadline: string | null;
+  isSettled: boolean;
+  createdAt: string;
 }
 
 export default function ReportsTab({
@@ -44,6 +57,7 @@ export default function ReportsTab({
   dailyData,
   currency,
   monthLabel,
+  loans,
 }: ReportsClientProps) {
   const net = totalIncome - totalExpense;
   const maxCategory = categoryBreakdown[0]?.total || 1;
@@ -293,6 +307,78 @@ export default function ReportsTab({
               </div>
             </div>
           )}
+
+          {/* Loans Summary */}
+          {(() => {
+            const activeLoans = loans.filter((l) => !l.isSettled);
+            const givenLoans = activeLoans.filter((l) => l.type === "GIVEN");
+            const takenLoans = activeLoans.filter((l) => l.type === "TAKEN");
+            const totalGiven = givenLoans.reduce((s, l) => s + l.remainingAmount, 0);
+            const totalTaken = takenLoans.reduce((s, l) => s + l.remainingAmount, 0);
+            const netLoan = totalGiven - totalTaken;
+            if (activeLoans.length === 0) return null;
+            return (
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mt-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-7 h-7 rounded-lg bg-cyan-50 flex items-center justify-center">
+                    <HandCoins size={14} className="text-cyan-600" />
+                  </div>
+                  <h2 className="text-sm font-semibold text-gray-900">Loans Summary</h2>
+                </div>
+
+                {/* Totals */}
+                <div className="grid grid-cols-3 gap-2 mb-4">
+                  <div className="bg-amber-50 rounded-xl p-2.5 text-center">
+                    <p className="text-[10px] text-amber-600 uppercase tracking-wide font-medium">Given</p>
+                    <p className="text-sm font-bold text-amber-700 mt-0.5">{formatCurrency(totalGiven, currency)}</p>
+                    <p className="text-[10px] text-amber-500">{givenLoans.length} active</p>
+                  </div>
+                  <div className="bg-purple-50 rounded-xl p-2.5 text-center">
+                    <p className="text-[10px] text-purple-600 uppercase tracking-wide font-medium">Taken</p>
+                    <p className="text-sm font-bold text-purple-700 mt-0.5">{formatCurrency(totalTaken, currency)}</p>
+                    <p className="text-[10px] text-purple-500">{takenLoans.length} active</p>
+                  </div>
+                  <div className="bg-gray-50 rounded-xl p-2.5 text-center">
+                    <p className="text-[10px] text-gray-500 uppercase tracking-wide font-medium">Net</p>
+                    <p className={`text-sm font-bold mt-0.5 ${netLoan >= 0 ? "text-emerald-600" : "text-red-500"}`}>
+                      {netLoan >= 0 ? "+" : "-"}{formatCurrency(Math.abs(netLoan), currency)}
+                    </p>
+                    <p className="text-[10px] text-gray-400">{netLoan >= 0 ? "receivable" : "payable"}</p>
+                  </div>
+                </div>
+
+                {/* Individual loans */}
+                <div className="space-y-2.5">
+                  {activeLoans.slice(0, 6).map((loan) => {
+                    const paidPct = loan.amount > 0 ? ((loan.amount - loan.remainingAmount) / loan.amount) * 100 : 0;
+                    const isGiven = loan.type === "GIVEN";
+                    const color = isGiven ? "#F59E0B" : "#8B5CF6";
+                    return (
+                      <div key={loan.id} className="flex items-center gap-2.5">
+                        <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: `${color}12` }}>
+                          {isGiven ? <ArrowUpRight size={13} style={{ color }} /> : <ArrowDownLeft size={13} style={{ color }} />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between mb-0.5">
+                            <span className="text-xs font-medium text-gray-700 truncate">{loan.personName}</span>
+                            <span className="text-xs font-semibold text-gray-900 shrink-0">
+                              {formatCurrency(loan.remainingAmount, currency)}
+                            </span>
+                          </div>
+                          <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                            <div className="h-full rounded-full transition-all duration-500" style={{ width: `${paidPct}%`, backgroundColor: color }} />
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {activeLoans.length > 6 && (
+                    <p className="text-[10px] text-gray-400 text-center">+{activeLoans.length - 6} more loans</p>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
         </div>
       )}
     </div>

@@ -37,6 +37,7 @@ export default async function HomePage({
     categoriesWithCounts,
     accountsWithCounts,
     allGoals,
+    allLoans,
   ] = await Promise.all([
     // Home: transactions
     prisma.transaction.findMany({
@@ -118,6 +119,11 @@ export default async function HomePage({
       where: { userId },
       orderBy: [{ currentAmount: "desc" }, { name: "asc" }],
     }),
+    // Loans
+    prisma.loan.findMany({
+      where: { userId },
+      orderBy: [{ isSettled: "asc" }, { createdAt: "desc" }],
+    }),
   ]);
 
   const currency = user?.currency || "BDT";
@@ -137,14 +143,14 @@ export default async function HomePage({
     { name: string; icon: string; color: string; total: number }
   > = {};
   transactions
-    .filter((t) => t.type === "EXPENSE")
+    .filter((t) => t.type === "EXPENSE" && t.categoryId)
     .forEach((t) => {
-      const key = t.categoryId;
+      const key = t.categoryId!;
       if (!categoryMap[key]) {
         categoryMap[key] = {
-          name: t.category.name,
-          icon: t.category.icon || "📦",
-          color: t.category.color || "#6B7280",
+          name: t.category?.name || "Unknown",
+          icon: t.category?.icon || "📦",
+          color: t.category?.color || "#6B7280",
           total: 0,
         };
       }
@@ -174,6 +180,7 @@ export default async function HomePage({
   // ── Budget calculations ──
   const spendingByCategory: Record<string, number> = {};
   for (const txn of budgetExpenseTransactions) {
+    if (!txn.categoryId) continue;
     spendingByCategory[txn.categoryId] =
       (spendingByCategory[txn.categoryId] || 0) + txn.amount;
   }
@@ -241,6 +248,7 @@ export default async function HomePage({
       categoriesWithCounts={JSON.parse(JSON.stringify(categoriesWithCounts))}
       accountsWithCounts={JSON.parse(JSON.stringify(accountsWithCounts))}
       allGoals={JSON.parse(JSON.stringify(allGoals))}
+      allLoans={JSON.parse(JSON.stringify(allLoans))}
     />
   );
 }

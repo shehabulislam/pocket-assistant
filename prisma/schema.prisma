@@ -34,6 +34,7 @@ model User {
   tags          Tag[]
   settings      Settings?
   recurringTxns RecurringTransaction[]
+  loans         Loan[]
 }
 
 model Account {
@@ -62,8 +63,8 @@ model Transaction {
   date          DateTime           @default(now())
   description   String?
   type          TransactionType
-  categoryId    String
-  category      Category           @relation(fields: [categoryId], references: [id])
+  categoryId    String?
+  category      Category?          @relation(fields: [categoryId], references: [id])
   accountId     String
   account       Account            @relation(fields: [accountId], references: [id])
   tags          TagOnTransaction[]
@@ -76,6 +77,7 @@ model Transaction {
 enum TransactionType {
   INCOME
   EXPENSE
+  TRANSFER
 }
 
 model Category {
@@ -149,6 +151,26 @@ model Goal {
   deadline      DateTime?
   userId        String
   user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Loan {
+  id              String    @id @default(cuid())
+  type            LoanType
+  personName      String
+  amount          Float
+  remainingAmount Float
+  description     String?
+  deadline        DateTime?
+  isSettled       Boolean   @default(false)
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+enum LoanType {
+  GIVEN
+  TAKEN
 }
 
 model Settings {
