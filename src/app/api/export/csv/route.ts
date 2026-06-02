@@ -31,7 +31,7 @@ export async function GET() {
     const rows = transactions.map((t) => [
       new Date(t.date).toISOString().split("T")[0],
       t.type,
-      t.category.name,
+      t.category?.name ?? "Uncategorized",
       t.amount.toFixed(2),
       t.account.name,
       `"${(t.description || "").replace(/"/g, '""')}"`,

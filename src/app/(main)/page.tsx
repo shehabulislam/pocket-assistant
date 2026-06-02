@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ensureDefaultCategories } from "@/lib/default-categories";
+import { getMonthReport, getMonthRange } from "@/lib/reports";
 import AppClient from "./AppClient";
 
 export default async function HomePage({
@@ -18,14 +19,14 @@ export default async function HomePage({
   const month = params.month ? parseInt(params.month) : now.getMonth();
   const year = params.year ? parseInt(params.year) : now.getFullYear();
 
-  const startOfMonth = new Date(year, month, 1);
-  const endOfMonth = new Date(year, month + 1, 0, 23, 59, 59, 999);
+  const { start: startOfMonth, end: endOfMonth } = getMonthRange(year, month);
 
   // Ensure default categories exist
   await ensureDefaultCategories(userId);
 
   // ── Fetch ALL data in parallel ──
   const [
+    report,
     transactions,
     user,
     goals,
@@ -33,13 +34,14 @@ export default async function HomePage({
     expenseCategories,
     accounts,
     budgets,
-    budgetExpenseTransactions,
     categoriesWithCounts,
     accountsWithCounts,
     allGoals,
     allLoans,
   ] = await Promise.all([
-    // Home: transactions
+    // Reports + Home totals: aggregated over the FULL month (single source of truth)
+    getMonthReport(userId, year, month),
+    // Home: recent transactions list (display only — capped)
     prisma.transaction.findMany({
       where: {
         userId,
@@ -93,15 +95,6 @@ export default async function HomePage({
       include: { category: true },
       orderBy: { category: { name: "asc" } },
     }),
-    // Budget spending data
-    prisma.transaction.findMany({
-      where: {
-        userId,
-        type: "EXPENSE",
-        date: { gte: startOfMonth, lte: endOfMonth },
-      },
-      select: { categoryId: true, amount: true },
-    }),
     // Settings: all categories with transaction counts
     prisma.category.findMany({
       where: { userId },
@@ -128,77 +121,29 @@ export default async function HomePage({
 
   const currency = user?.currency || "BDT";
 
-  // ── Home calculations ──
-  const totalIncome = transactions
-    .filter((t) => t.type === "INCOME")
-    .reduce((sum, t) => sum + t.amount, 0);
-
-  const totalExpense = transactions
-    .filter((t) => t.type === "EXPENSE")
-    .reduce((sum, t) => sum + t.amount, 0);
-
-  // ── Reports calculations ──
-  const categoryMap: Record<
-    string,
-    { name: string; icon: string; color: string; total: number }
-  > = {};
-  transactions
-    .filter((t) => t.type === "EXPENSE" && t.categoryId)
-    .forEach((t) => {
-      const key = t.categoryId!;
-      if (!categoryMap[key]) {
-        categoryMap[key] = {
-          name: t.category?.name || "Unknown",
-          icon: t.category?.icon || "📦",
-          color: t.category?.color || "#6B7280",
-          total: 0,
-        };
-      }
-      categoryMap[key].total += t.amount;
-    });
-  const categoryBreakdown = Object.values(categoryMap).sort(
-    (a, b) => b.total - a.total
-  );
-
-  const daysInMonth = endOfMonth.getDate();
-  const dailyData: { day: number; income: number; expense: number }[] = [];
-  for (let d = 1; d <= daysInMonth; d++) {
-    const dayTxns = transactions.filter(
-      (t) => new Date(t.date).getDate() === d
-    );
-    dailyData.push({
-      day: d,
-      income: dayTxns
-        .filter((t) => t.type === "INCOME")
-        .reduce((s, t) => s + t.amount, 0),
-      expense: dayTxns
-        .filter((t) => t.type === "EXPENSE")
-        .reduce((s, t) => s + t.amount, 0),
-    });
-  }
+  // ── Report aggregates (single source of truth — full month) ──
+  const {
+    totalIncome,
+    totalExpense,
+    categoryBreakdown,
+    dailyData,
+    expenseByCategory,
+  } = report;
 
   // ── Budget calculations ──
-  const spendingByCategory: Record<string, number> = {};
-  for (const txn of budgetExpenseTransactions) {
-    if (!txn.categoryId) continue;
-    spendingByCategory[txn.categoryId] =
-      (spendingByCategory[txn.categoryId] || 0) + txn.amount;
-  }
+  const spendingByCategory = expenseByCategory;
   const totalBudget = budgets.reduce((sum, b) => sum + b.limit, 0);
   const totalSpent = budgets.reduce(
     (sum, b) => sum + (spendingByCategory[b.categoryId] || 0),
     0
   );
 
-  const monthLabel = now.toLocaleDateString("en-US", {
+  const monthLabel = startOfMonth.toLocaleDateString("en-US", {
     month: "long",
     year: "numeric",
   });
 
-  const budgetMonthLabel = new Date(year, month).toLocaleDateString("en-US", {
-    month: "long",
-    year: "numeric",
-  });
+  const budgetMonthLabel = monthLabel;
 
   // Check if user has any transactions today (for reminder banner)
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());

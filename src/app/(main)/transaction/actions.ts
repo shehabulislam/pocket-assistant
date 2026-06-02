@@ -42,24 +42,25 @@ export async function createTransaction(formData: {
       }
     }
 
-    const transaction = await prisma.transaction.create({
-      data: {
-        amount,
-        type: formData.type,
-        categoryId: formData.categoryId,
-        accountId: formData.accountId,
-        description: formData.description || null,
-        date: new Date(formData.date),
-        userId,
-      },
-    });
-
-    // Update account balance
+    // Create transaction + update balance atomically so they never drift apart
     const balanceChange = formData.type === "INCOME" ? amount : -amount;
-    await prisma.account.update({
-      where: { id: formData.accountId },
-      data: { balance: { increment: balanceChange } },
-    });
+    const [transaction] = await prisma.$transaction([
+      prisma.transaction.create({
+        data: {
+          amount,
+          type: formData.type,
+          categoryId: formData.categoryId,
+          accountId: formData.accountId,
+          description: formData.description || null,
+          date: new Date(formData.date),
+          userId,
+        },
+      }),
+      prisma.account.update({
+        where: { id: formData.accountId },
+        data: { balance: { increment: balanceChange } },
+      }),
+    ]);
 
     revalidatePath("/");
     return { success: true, id: transaction.id };
@@ -98,34 +99,32 @@ export async function updateTransaction(
     }
 
     const amount = Math.abs(formData.amount);
-
-    // Reverse old balance
     const oldBalanceChange =
       existing.type === "INCOME" ? -existing.amount : existing.amount;
-    await prisma.account.update({
-      where: { id: existing.accountId },
-      data: { balance: { increment: oldBalanceChange } },
-    });
-
-    // Update the transaction
-    await prisma.transaction.update({
-      where: { id },
-      data: {
-        amount,
-        type: formData.type,
-        categoryId: formData.categoryId,
-        accountId: formData.accountId,
-        description: formData.description || null,
-        date: new Date(formData.date),
-      },
-    });
-
-    // Apply new balance
     const newBalanceChange = formData.type === "INCOME" ? amount : -amount;
-    await prisma.account.update({
-      where: { id: formData.accountId },
-      data: { balance: { increment: newBalanceChange } },
-    });
+
+    // Reverse old balance, update the transaction, apply new balance — atomically
+    await prisma.$transaction([
+      prisma.account.update({
+        where: { id: existing.accountId },
+        data: { balance: { increment: oldBalanceChange } },
+      }),
+      prisma.transaction.update({
+        where: { id },
+        data: {
+          amount,
+          type: formData.type,
+          categoryId: formData.categoryId,
+          accountId: formData.accountId,
+          description: formData.description || null,
+          date: new Date(formData.date),
+        },
+      }),
+      prisma.account.update({
+        where: { id: formData.accountId },
+        data: { balance: { increment: newBalanceChange } },
+      }),
+    ]);
 
     revalidatePath("/");
     return { success: true };
@@ -152,17 +151,18 @@ export async function deleteTransaction(id: string) {
       return { error: "Transaction not found" };
     }
 
-    // Reverse the balance change
+    // Reverse the balance change + delete atomically
     const balanceChange =
       transaction.type === "INCOME"
         ? -transaction.amount
         : transaction.amount;
-    await prisma.account.update({
-      where: { id: transaction.accountId },
-      data: { balance: { increment: balanceChange } },
-    });
-
-    await prisma.transaction.delete({ where: { id } });
+    await prisma.$transaction([
+      prisma.account.update({
+        where: { id: transaction.accountId },
+        data: { balance: { increment: balanceChange } },
+      }),
+      prisma.transaction.delete({ where: { id } }),
+    ]);
 
     revalidatePath("/");
     return { success: true };

@@ -52,6 +52,7 @@ export default async function BudgetsPage() {
 
   const spendingByCategory: Record<string, number> = {};
   for (const txn of transactions) {
+    if (!txn.categoryId) continue;
     spendingByCategory[txn.categoryId] =
       (spendingByCategory[txn.categoryId] || 0) + txn.amount;
   }
