@@ -89,9 +89,9 @@ These have **database models or UI placeholders already**, so they're the cheape
 ## 4. Prioritized Implementation Plan
 
 ### 🟢 Phase 1 — Quick Wins (schema already supports it)
-1. **Tags end-to-end** — CRUD actions + transaction-form multi-select + filter by tag.
+1. ✅ **Tags end-to-end** — CRUD actions + transaction-form multi-select + filter by tag. _(shipped)_
 2. **Manual TRANSFER in the transaction form** — add the third type; UI already renders it.
-3. **Transaction search & filter** — text/category/account/date-range filter on the Home list.
+3. ✅ **Transaction search & filter** — `/transactions` page: full-text (description + category), type, category, account, tag, and date-range filters, server-side over all history. _(shipped — `feature/transaction-search`)_
 4. **Custom date-range reports** — honor the existing `viewPeriod` setting; the new `getMonthReport` helper generalizes cleanly to arbitrary ranges.
 
 ### 🟡 Phase 2 — Engines & Automation
