@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Calendar, Check } from "lucide-react";
 import { createTransaction } from "../actions";
 import { formatCurrency } from "@/lib/utils";
+import TagPicker, { type TagOption } from "@/components/TagPicker";
 
 interface Category {
   id: string;
@@ -24,12 +25,14 @@ interface TransactionFormProps {
   type: "INCOME" | "EXPENSE";
   categories: Category[];
   accounts: Account[];
+  tags: TagOption[];
 }
 
 export default function TransactionForm({
   type,
   categories,
   accounts,
+  tags,
 }: TransactionFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -38,6 +41,7 @@ export default function TransactionForm({
   const [categoryId, setCategoryId] = useState("");
   const [accountId, setAccountId] = useState(accounts[0]?.id || "");
   const [description, setDescription] = useState("");
+  const [tagIds, setTagIds] = useState<string[]>([]);
   const [date, setDate] = useState(
     new Date().toISOString().split("T")[0]
   );
@@ -75,6 +79,7 @@ export default function TransactionForm({
         accountId,
         description: description || undefined,
         date,
+        tagIds,
       });
 
       if (result.error) {
@@ -270,7 +275,7 @@ export default function TransactionForm({
           </div>
 
           {/* Description */}
-          <div>
+          <div className="mb-4">
             <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
               Note (Optional)
             </label>
@@ -283,6 +288,9 @@ export default function TransactionForm({
               className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all"
             />
           </div>
+
+          {/* Tags */}
+          <TagPicker tags={tags} selectedIds={tagIds} onChange={setTagIds} />
         </div>
       </div>
 

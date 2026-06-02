@@ -21,7 +21,7 @@ export default async function NewTransactionPage({
   const categoryType =
     txnType === "INCOME" ? "INCOME" : "EXPENSE";
 
-  const [categories, accounts] = await Promise.all([
+  const [categories, accounts, tags] = await Promise.all([
     prisma.category.findMany({
       where: { userId, type: categoryType },
       orderBy: { name: "asc" },
@@ -30,6 +30,11 @@ export default async function NewTransactionPage({
       where: { userId },
       orderBy: { name: "asc" },
     }),
+    prisma.tag.findMany({
+      where: { userId },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true, color: true },
+    }),
   ]);
 
   return (
@@ -37,6 +42,7 @@ export default async function NewTransactionPage({
       type={categoryType}
       categories={JSON.parse(JSON.stringify(categories))}
       accounts={JSON.parse(JSON.stringify(accounts))}
+      tags={JSON.parse(JSON.stringify(tags))}
     />
   );
 }

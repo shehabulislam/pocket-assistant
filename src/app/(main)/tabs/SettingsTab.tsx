@@ -396,8 +396,7 @@ export default function SettingsTab(props: SettingsClientProps) {
             iconBg="#F59E0B"
             label="Tags"
             subtitle="Organize transactions"
-            locked={!isSuperAdmin}
-            onClick={() => !isSuperAdmin ? null : router.push("/tags")}
+            onClick={() => router.push("/tags")}
           />
           <SettingsItem
             icon={HandCoins}

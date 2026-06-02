@@ -467,6 +467,29 @@ export default function HomeTab({
                               {txn.description}
                             </p>
                           )}
+                          {txn.tags && txn.tags.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {txn.tags.map(({ tag }) => {
+                                const color = tag.color || "#64748B";
+                                return (
+                                  <span
+                                    key={tag.id}
+                                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-medium"
+                                    style={{
+                                      backgroundColor: `${color}15`,
+                                      color,
+                                    }}
+                                  >
+                                    <span
+                                      className="w-1.5 h-1.5 rounded-full"
+                                      style={{ backgroundColor: color }}
+                                    />
+                                    {tag.name}
+                                  </span>
+                                );
+                              })}
+                            </div>
+                          )}
                         </div>
 
                         {/* Amount */}

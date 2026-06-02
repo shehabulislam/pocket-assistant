@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Calendar, Check, Trash2 } from "lucide-react";
 import { updateTransaction, deleteTransaction } from "../actions";
 import { formatCurrency } from "@/lib/utils";
+import TagPicker, { type TagOption } from "@/components/TagPicker";
 
 interface Category {
   id: string;
@@ -29,18 +30,21 @@ interface TransactionData {
   categoryId: string;
   accountId: string;
   category: Category;
+  tags: { tagId: string }[];
 }
 
 interface EditTransactionClientProps {
   transaction: TransactionData;
   categories: Category[];
   accounts: Account[];
+  tags: TagOption[];
 }
 
 export default function EditTransactionClient({
   transaction,
   categories,
   accounts,
+  tags,
 }: EditTransactionClientProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -50,6 +54,9 @@ export default function EditTransactionClient({
   const [accountId, setAccountId] = useState(transaction.accountId);
   const [description, setDescription] = useState(
     transaction.description || ""
+  );
+  const [tagIds, setTagIds] = useState<string[]>(
+    transaction.tags.map((t) => t.tagId)
   );
   const [date, setDate] = useState(
     new Date(transaction.date).toISOString().split("T")[0]
@@ -80,6 +87,7 @@ export default function EditTransactionClient({
         accountId,
         description: description || undefined,
         date,
+        tagIds,
       });
 
       if (result.error) {
@@ -302,7 +310,7 @@ export default function EditTransactionClient({
           </div>
 
           {/* Description */}
-          <div>
+          <div className="mb-4">
             <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
               Note (Optional)
             </label>
@@ -314,6 +322,9 @@ export default function EditTransactionClient({
               className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all"
             />
           </div>
+
+          {/* Tags */}
+          <TagPicker tags={tags} selectedIds={tagIds} onChange={setTagIds} />
         </div>
       </div>
 

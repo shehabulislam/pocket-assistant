@@ -16,25 +16,35 @@ export default async function EditTransactionPage({
 
   const transaction = await prisma.transaction.findFirst({
     where: { id, userId },
-    include: { category: true, account: true },
+    include: {
+      category: true,
+      account: true,
+      tags: { select: { tagId: true } },
+    },
   });
 
   if (!transaction) notFound();
 
-  const [expenseCategories, incomeCategories, accounts] = await Promise.all([
-    prisma.category.findMany({
-      where: { userId, type: "EXPENSE" },
-      orderBy: { name: "asc" },
-    }),
-    prisma.category.findMany({
-      where: { userId, type: "INCOME" },
-      orderBy: { name: "asc" },
-    }),
-    prisma.account.findMany({
-      where: { userId },
-      orderBy: { name: "asc" },
-    }),
-  ]);
+  const [expenseCategories, incomeCategories, accounts, tags] =
+    await Promise.all([
+      prisma.category.findMany({
+        where: { userId, type: "EXPENSE" },
+        orderBy: { name: "asc" },
+      }),
+      prisma.category.findMany({
+        where: { userId, type: "INCOME" },
+        orderBy: { name: "asc" },
+      }),
+      prisma.account.findMany({
+        where: { userId },
+        orderBy: { name: "asc" },
+      }),
+      prisma.tag.findMany({
+        where: { userId },
+        orderBy: { name: "asc" },
+        select: { id: true, name: true, color: true },
+      }),
+    ]);
 
   const categories =
     transaction.type === "INCOME" ? incomeCategories : expenseCategories;
@@ -44,6 +54,7 @@ export default async function EditTransactionPage({
       transaction={JSON.parse(JSON.stringify(transaction))}
       categories={JSON.parse(JSON.stringify(categories))}
       accounts={JSON.parse(JSON.stringify(accounts))}
+      tags={JSON.parse(JSON.stringify(tags))}
     />
   );
 }

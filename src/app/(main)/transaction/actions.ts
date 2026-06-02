@@ -4,6 +4,22 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
+/**
+ * Filter the requested tag ids down to those the user actually owns, so a
+ * transaction can never be linked to another user's (or a non-existent) tag.
+ */
+async function validateTagIds(
+  userId: string,
+  tagIds?: string[]
+): Promise<string[]> {
+  if (!tagIds || tagIds.length === 0) return [];
+  const owned = await prisma.tag.findMany({
+    where: { userId, id: { in: tagIds } },
+    select: { id: true },
+  });
+  return owned.map((t) => t.id);
+}
+
 export async function createTransaction(formData: {
   amount: number;
   type: "INCOME" | "EXPENSE";
@@ -11,6 +27,7 @@ export async function createTransaction(formData: {
   accountId: string;
   description?: string;
   date: string;
+  tagIds?: string[];
 }) {
   const session = await auth();
   if (!session?.user?.id) {
@@ -42,6 +59,9 @@ export async function createTransaction(formData: {
       }
     }
 
+    // Validate tag ownership so we never link another user's tags
+    const tagIds = await validateTagIds(userId, formData.tagIds);
+
     // Create transaction + update balance atomically so they never drift apart
     const balanceChange = formData.type === "INCOME" ? amount : -amount;
     const [transaction] = await prisma.$transaction([
@@ -54,6 +74,7 @@ export async function createTransaction(formData: {
           description: formData.description || null,
           date: new Date(formData.date),
           userId,
+          tags: { create: tagIds.map((tagId) => ({ tagId })) },
         },
       }),
       prisma.account.update({
@@ -79,6 +100,7 @@ export async function updateTransaction(
     accountId: string;
     description?: string;
     date: string;
+    tagIds?: string[];
   }
 ) {
   const session = await auth();
@@ -102,13 +124,16 @@ export async function updateTransaction(
     const oldBalanceChange =
       existing.type === "INCOME" ? -existing.amount : existing.amount;
     const newBalanceChange = formData.type === "INCOME" ? amount : -amount;
+    const tagIds = await validateTagIds(userId, formData.tagIds);
 
-    // Reverse old balance, update the transaction, apply new balance — atomically
+    // Reverse old balance, update the transaction, re-link tags, apply new
+    // balance — all atomically.
     await prisma.$transaction([
       prisma.account.update({
         where: { id: existing.accountId },
         data: { balance: { increment: oldBalanceChange } },
       }),
+      prisma.tagOnTransaction.deleteMany({ where: { transactionId: id } }),
       prisma.transaction.update({
         where: { id },
         data: {
@@ -118,6 +143,7 @@ export async function updateTransaction(
           accountId: formData.accountId,
           description: formData.description || null,
           date: new Date(formData.date),
+          tags: { create: tagIds.map((tagId) => ({ tagId })) },
         },
       }),
       prisma.account.update({

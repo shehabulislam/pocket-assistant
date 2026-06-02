@@ -50,6 +50,7 @@ export default async function HomePage({
       include: {
         category: true,
         account: true,
+        tags: { include: { tag: true } },
       },
       orderBy: { date: "desc" },
       take: 50,

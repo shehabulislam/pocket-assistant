@@ -27,11 +27,11 @@ A personal finance tracker (Next.js 16 + Prisma 7 + Postgres, mobile-first PWA-s
 
 These have **database models or UI placeholders already**, so they're the cheapest high-value wins.
 
-### 2.1 🏷️ Tags — _model exists, completely unwired_
-- `Tag` + `TagOnTransaction` models exist in [schema.prisma](prisma/schema.prisma).
-- [tags/page.tsx](src/app/(main)/tags/page.tsx) is a static "Create Tag" placeholder — no action, no list.
-- [TransactionForm.tsx](src/app/(main)/transaction/new/TransactionForm.tsx) has **no tag selector**.
-- **To implement:** tag CRUD actions, tag multi-select on the transaction form, filter/report by tag.
+### 2.1 🏷️ Tags — ✅ **IMPLEMENTED** (`feature/tags-and-transfers`)
+- Tag CRUD via [tags/actions.ts](src/app/(main)/tags/actions.ts) + [TagsClient.tsx](src/app/(main)/tags/TagsClient.tsx) (create/edit/delete, duplicate-name guard, ownership checks).
+- Reusable [TagPicker.tsx](src/components/TagPicker.tsx) multi-select wired into both the new and edit transaction forms; tag links are written/replaced inside the same atomic `$transaction` as the balance update.
+- Tag chips now render on transaction rows in [HomeTab.tsx](src/app/(main)/tabs/HomeTab.tsx); Tags is ungated in Settings for all users.
+- **Still open:** filtering/reporting _by_ tag (depends on the transaction search/filter work in Phase 1.3).
 
 ### 2.2 🔁 Recurring Transactions — _model exists, no engine_
 - `RecurringTransaction` model (with `frequency`, `nextDue`, `isActive`) exists.

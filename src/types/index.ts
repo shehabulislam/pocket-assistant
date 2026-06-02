@@ -27,6 +27,13 @@ export interface TransactionWithCategory {
     name: string;
     type: AccountType;
   };
+  tags?: {
+    tag: {
+      id: string;
+      name: string;
+      color: string | null;
+    };
+  }[];
 }
 
 export interface MonthlySummary {
