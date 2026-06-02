@@ -68,7 +68,7 @@ These have **database models or UI placeholders already**, so they're the cheape
 
 ### 3.2 Account & loan integrity
 - **Goal funding doesn't move money** — `Goal.currentAmount` is edited manually; contributions don't debit an account.
-- **Loan payments don't touch cash** — confirmed: `recordLoanPayment` only decrements `Loan.remainingAmount`; it never adjusts an account balance or creates a transaction, so giving/receiving loan money is invisible to cash flow and reports.
+- **Loan ↔ account balance** — ✅ **IMPLEMENTED** (`feature/loan-account-balance`). Loans can now be linked to an account; creating, repaying, settling, and deleting a loan adjust that account's balance atomically (GIVEN moves money out / repayments back in; TAKEN the reverse), with insufficient-balance guards on outflows. The account link is optional, so loans created without one behave as before. _Still open:_ loan flows do not yet create visible Transaction records, so they remain outside income/expense reports (intentional for now).
 - **Account archiving** — accounts can only be deleted, not archived/hidden.
 
 ### 3.3 Auth & account security

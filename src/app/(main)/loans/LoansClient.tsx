@@ -16,14 +16,25 @@ export interface LoanItem {
   deadline: string | null;
   isSettled: boolean;
   createdAt: string;
+  accountId: string | null;
+  account: { id: string; name: string } | null;
+}
+
+export interface AccountOption {
+  id: string;
+  name: string;
+  type: string;
+  balance: number;
 }
 
 export default function LoansClient({
   loans,
+  accounts,
   currency,
   onBack,
 }: {
   loans: LoanItem[];
+  accounts: AccountOption[];
   currency: string;
   onBack?: () => void;
 }) {
@@ -35,6 +46,7 @@ export default function LoansClient({
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
   const [deadline, setDeadline] = useState("");
+  const [accountId, setAccountId] = useState(accounts[0]?.id ?? "");
   const [error, setError] = useState("");
 
   // Payment modal
@@ -58,11 +70,12 @@ export default function LoansClient({
         amount: parseFloat(amount),
         description: description || undefined,
         deadline: deadline || undefined,
+        accountId: accountId || undefined,
       });
       if (result.error) setError(result.error);
       else {
         setShowAdd(false); setPersonName(""); setAmount(""); setDescription("");
-        setDeadline(""); router.refresh();
+        setDeadline(""); setAccountId(accounts[0]?.id ?? ""); router.refresh();
       }
     });
   };
@@ -122,11 +135,18 @@ export default function LoansClient({
           </div>
         </div>
 
-        {loan.deadline && (
-          <p className="text-[10px] text-gray-400 mb-2">
-            Due: {new Date(loan.deadline).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-          </p>
-        )}
+        <div className="flex items-center gap-2 mb-2 flex-wrap">
+          {loan.deadline && (
+            <p className="text-[10px] text-gray-400">
+              Due: {new Date(loan.deadline).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+            </p>
+          )}
+          {loan.account && (
+            <span className="text-[10px] text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded-md">
+              {loan.account.name}
+            </span>
+          )}
+        </div>
 
         {!loan.isSettled && (
           <div className="flex gap-2 mt-1">
@@ -247,6 +267,51 @@ export default function LoansClient({
                   className="flex-1 px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-lg font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-400" />
               </div>
 
+              {/* Account */}
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                Account {loanType === "GIVEN" ? "(money out)" : "(money in)"}
+              </p>
+              {accounts.length === 0 ? (
+                <p className="text-xs text-gray-400 mb-4">
+                  No accounts yet — this loan won&apos;t affect any balance.
+                </p>
+              ) : (
+                <div className="flex gap-2 flex-wrap mb-4">
+                  <button
+                    type="button"
+                    onClick={() => setAccountId("")}
+                    className={`px-3 py-2 rounded-xl text-sm font-medium border transition-all ${
+                      accountId === ""
+                        ? "bg-gray-200 text-gray-700 border-gray-300"
+                        : "bg-gray-50 text-gray-500 border-gray-200"
+                    }`}
+                  >
+                    None
+                  </button>
+                  {accounts.map((acc) => (
+                    <button
+                      key={acc.id}
+                      type="button"
+                      onClick={() => setAccountId(acc.id)}
+                      className={`px-3 py-2 rounded-xl text-sm font-medium border transition-all ${
+                        accountId === acc.id
+                          ? "bg-emerald-50 text-emerald-600 border-emerald-300"
+                          : "bg-gray-50 text-gray-500 border-gray-200"
+                      }`}
+                    >
+                      {acc.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {accountId && (
+                <p className="text-[11px] text-gray-400 -mt-2 mb-4">
+                  {loanType === "GIVEN"
+                    ? "Amount will be deducted from this account now, and added back as you receive repayments."
+                    : "Amount will be added to this account now, and deducted as you repay."}
+                </p>
+              )}
+
               {/* Deadline */}
               <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Deadline (Optional)</p>
               <input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)}
@@ -277,7 +342,13 @@ export default function LoansClient({
               <button onClick={() => setPayLoan(null)} className="p-1 rounded-full hover:bg-gray-100"><X size={20} className="text-gray-400" /></button>
             </div>
             <p className="text-sm text-gray-500 mb-1">Paying for loan with <strong>{payLoan.personName}</strong></p>
-            <p className="text-xs text-gray-400 mb-3">Remaining: {formatCurrency(payLoan.remainingAmount, currency)}</p>
+            <p className="text-xs text-gray-400 mb-1">Remaining: {formatCurrency(payLoan.remainingAmount, currency)}</p>
+            {payLoan.account && (
+              <p className="text-xs text-gray-400 mb-3">
+                {payLoan.type === "GIVEN" ? "Adds to" : "Deducts from"}{" "}
+                <strong>{payLoan.account.name}</strong>
+              </p>
+            )}
             {payError && <div className="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-xl border border-red-100 mb-4 animate-shake">{payError}</div>}
             <div className="flex items-center gap-2 mb-4">
               <span className="text-lg font-bold text-gray-400">৳</span>

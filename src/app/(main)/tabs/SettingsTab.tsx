@@ -260,7 +260,7 @@ export default function SettingsTab(props: SettingsClientProps) {
   if (view === "accounts") return <AccountsClient accounts={props.accountsWithCounts} onBack={() => setView("main")} />;
   if (view === "budgets") return <BudgetsClient budgets={props.budgets} expenseCategories={props.expenseCategories} spendingByCategory={props.spendingByCategory} totalBudget={props.totalBudget} totalSpent={props.totalSpent} currency={props.currency} currentMonth={props.currentBudgetMonth} monthLabel={props.budgetMonthLabel} onBack={() => setView("main")} />;
   if (view === "goals") return <GoalsClient goals={props.allGoals} currency={props.currency} onBack={() => setView("main")} />;
-  if (view === "loans") return <LoansClient loans={props.allLoans} currency={props.currency} onBack={() => setView("main")} />;
+  if (view === "loans") return <LoansClient loans={props.allLoans} accounts={props.accountsWithCounts} currency={props.currency} onBack={() => setView("main")} />;
 
   return (
     <div className="animate-fadeIn">

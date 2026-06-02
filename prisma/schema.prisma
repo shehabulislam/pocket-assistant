@@ -45,6 +45,7 @@ model Account {
   userId       String
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   transactions Transaction[]
+  loans        Loan[]
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 }
@@ -164,8 +165,14 @@ model Loan {
   isSettled       Boolean   @default(false)
   userId          String
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Optional account the loan's cash flows through. When set, creating the
+  // loan, recording payments, settling, and deleting adjust this balance.
+  accountId       String?
+  account         Account?  @relation(fields: [accountId], references: [id])
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
+
+  @@index([accountId])
 }
 
 enum LoanType {

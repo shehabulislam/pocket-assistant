@@ -117,6 +117,7 @@ export default async function HomePage({
     prisma.loan.findMany({
       where: { userId },
       orderBy: [{ isSettled: "asc" }, { createdAt: "desc" }],
+      include: { account: { select: { id: true, name: true } } },
     }),
   ]);
 
