@@ -15,6 +15,7 @@ import {
   X,
   RefreshCw,
   Bell,
+  Search,
 } from "lucide-react";
 import { formatCurrency, formatSignedCurrency, getMonthName } from "@/lib/utils";
 import { createTransaction } from "../transaction/actions";
@@ -408,9 +409,17 @@ export default function HomeTab({
       {/* Recent Transactions */}
       <div className="px-4">
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-          <h2 className="text-base font-semibold text-gray-900 px-4 pt-4 pb-2">
-            Recent Transactions
-          </h2>
+          <div className="flex items-center justify-between px-4 pt-4 pb-2">
+            <h2 className="text-base font-semibold text-gray-900">
+              Recent Transactions
+            </h2>
+            <Link
+              href="/transactions"
+              className="flex items-center gap-1 text-xs font-medium text-emerald-600 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1.5 rounded-lg transition-colors"
+            >
+              <Search size={14} /> Search
+            </Link>
+          </div>
 
           {transactions.length === 0 ? (
             <div className="flex flex-col items-center py-12 px-4">
