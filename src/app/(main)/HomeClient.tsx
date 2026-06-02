@@ -382,18 +382,18 @@ export default function HomeClient({
                           className="w-10 h-10 rounded-xl flex items-center justify-center text-lg shrink-0"
                           style={{
                             backgroundColor:
-                              txn.category.color
+                              txn.category?.color
                                 ? `${txn.category.color}15`
                                 : "#f3f4f6",
                           }}
                         >
-                          {txn.category.icon || "📦"}
+                          {txn.category?.icon || "📦"}
                         </div>
 
                         {/* Details */}
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-gray-900 truncate">
-                            {txn.category.name}
+                            {txn.category?.name || "Transaction"}
                           </p>
                           {txn.description && (
                             <p className="text-xs text-gray-400 truncate">
