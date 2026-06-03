@@ -100,6 +100,50 @@ export async function createAccount(data: {
   }
 }
 
+export async function updateAccount(
+  id: string,
+  data: {
+    name: string;
+    type: "CASH" | "BANK" | "MOBILE_BANKING" | "CREDIT" | "INVESTMENT";
+    balance: number;
+  }
+) {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Unauthorized" };
+
+  if (!data.name.trim()) {
+    return { error: "Please enter an account name" };
+  }
+  if (!Number.isFinite(data.balance)) {
+    return { error: "Please enter a valid balance" };
+  }
+
+  try {
+    // Scope by userId so a user can only edit their own account. The balance is
+    // set directly here — this is the manual correction path for fixing drift,
+    // separate from transactions which adjust it incrementally.
+    const result = await prisma.account.updateMany({
+      where: { id, userId: session.user.id },
+      data: {
+        name: data.name.trim(),
+        type: data.type,
+        balance: data.balance,
+      },
+    });
+
+    if (result.count === 0) {
+      return { error: "Account not found" };
+    }
+
+    revalidatePath("/settings/accounts");
+    revalidatePath("/");
+    return { success: true };
+  } catch (error) {
+    console.error("Update account error:", error);
+    return { error: "Failed to update account" };
+  }
+}
+
 export async function deleteAccount(id: string) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Unauthorized" };
