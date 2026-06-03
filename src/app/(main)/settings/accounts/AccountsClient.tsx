@@ -2,8 +2,8 @@
 
 import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Plus, Trash2, X, Check, Receipt, ArrowRightLeft } from "lucide-react";
-import { createAccount, deleteAccount, getAccountTransactions, transferBalance } from "../actions";
+import { ArrowLeft, Plus, Trash2, X, Check, Receipt, ArrowRightLeft, Pencil } from "lucide-react";
+import { createAccount, updateAccount, deleteAccount, getAccountTransactions, transferBalance } from "../actions";
 import { deleteTransaction } from "../../transaction/actions";
 import { formatCurrency } from "@/lib/utils";
 
@@ -54,6 +54,56 @@ export default function AccountsClient({
   const [selectedAccount, setSelectedAccount] = useState<AccountItem | null>(null);
   const [accountTxns, setAccountTxns] = useState<any[]>([]);
   const [loadingTxns, setLoadingTxns] = useState(false);
+
+  // Edit account state
+  const [showEdit, setShowEdit] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [editType, setEditType] = useState<AccountItem["type"]>("BANK");
+  const [editBalance, setEditBalance] = useState("0");
+  const [editError, setEditError] = useState("");
+
+  const openEditAccount = (account: AccountItem) => {
+    setEditName(account.name);
+    setEditType(account.type);
+    setEditBalance(account.balance.toString());
+    setEditError("");
+    setShowEdit(true);
+  };
+
+  const handleEdit = () => {
+    if (!selectedAccount) return;
+    if (!editName.trim()) {
+      setEditError("Please enter an account name");
+      return;
+    }
+    const parsedBalance = parseFloat(editBalance);
+    if (!Number.isFinite(parsedBalance)) {
+      setEditError("Please enter a valid balance");
+      return;
+    }
+    setEditError("");
+
+    startTransition(async () => {
+      const result = await updateAccount(selectedAccount.id, {
+        name: editName.trim(),
+        type: editType,
+        balance: parsedBalance,
+      });
+      if (result.error) {
+        setEditError(result.error);
+      } else {
+        // Keep the open detail view in sync with the saved values.
+        setSelectedAccount({
+          ...selectedAccount,
+          name: editName.trim(),
+          type: editType,
+          balance: parsedBalance,
+        });
+        setShowEdit(false);
+        router.refresh();
+      }
+    });
+  };
 
   // Transfer state
   const [showTransfer, setShowTransfer] = useState(false);
@@ -156,7 +206,13 @@ export default function AccountsClient({
             <h1 className="text-lg font-bold text-gray-900">
               {selectedAccount.name}
             </h1>
-            <div className="w-8" />
+            <button
+              onClick={() => openEditAccount(selectedAccount)}
+              className="p-1.5 rounded-full hover:bg-gray-100 transition-colors"
+              aria-label="Edit account"
+            >
+              <Pencil size={18} className="text-gray-600" />
+            </button>
           </div>
         </header>
 
@@ -248,6 +304,110 @@ export default function AccountsClient({
             </div>
           )}
         </div>
+
+        {/* Edit Account Modal */}
+        {showEdit && (
+          <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/40 animate-fadeIn">
+            <div className="bg-white rounded-t-3xl sm:rounded-2xl w-full max-w-md shadow-xl animate-slideUp max-h-[92vh] flex flex-col">
+              {/* Modal Header */}
+              <div className="shrink-0 flex items-center justify-between px-6 pt-6 pb-3">
+                <h3 className="text-lg font-bold text-gray-900">Edit Account</h3>
+                <button
+                  onClick={() => setShowEdit(false)}
+                  className="p-1 rounded-full hover:bg-gray-100"
+                >
+                  <X size={20} className="text-gray-400" />
+                </button>
+              </div>
+
+              {/* Scrollable Content */}
+              <div className="flex-1 overflow-y-auto px-6">
+                {editError && (
+                  <div className="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-xl border border-red-100 mb-4 animate-shake">
+                    {editError}
+                  </div>
+                )}
+
+                {/* Account Name */}
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                  Account Name
+                </p>
+                <input
+                  type="text"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  placeholder="e.g. bKash, Nagad, DBBL"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                />
+
+                {/* Account Type */}
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                  Account Type
+                </p>
+                <div className="grid grid-cols-2 gap-2 mb-4">
+                  {ACCOUNT_TYPES.map((t) => (
+                    <button
+                      key={t.value}
+                      onClick={() => setEditType(t.value)}
+                      className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm font-medium transition-all ${
+                        editType === t.value
+                          ? "border-2 bg-emerald-50 text-emerald-700 border-emerald-400"
+                          : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                      }`}
+                    >
+                      <span className="text-lg">{t.icon}</span>
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Balance */}
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                  Current Balance
+                </p>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-lg font-bold text-gray-400">৳</span>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    value={editBalance}
+                    onChange={(e) => setEditBalance(e.target.value)}
+                    placeholder="0.00"
+                    className="flex-1 px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-lg font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
+                  />
+                </div>
+                <p className="text-xs text-gray-400 mb-4">
+                  Setting this overrides the balance directly — use it to correct
+                  drift. It does not create a transaction.
+                </p>
+              </div>
+
+              {/* Submit - pinned at bottom */}
+              <div
+                className="shrink-0 px-6 pt-3 pb-4 border-t border-gray-100 bg-white rounded-b-2xl"
+                style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
+              >
+                <button
+                  onClick={handleEdit}
+                  disabled={isPending || !editName.trim()}
+                  className="w-full py-3 rounded-xl bg-emerald-500 text-white font-semibold hover:bg-emerald-600 transition-colors disabled:opacity-50 active:scale-[0.98] flex items-center justify-center gap-2"
+                >
+                  {isPending ? (
+                    <span className="inline-flex items-center gap-2">
+                      <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      Saving...
+                    </span>
+                  ) : (
+                    <>
+                      <Check size={18} />
+                      Save Changes
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
