@@ -41,10 +41,13 @@ export default async function HomePage({
   ] = await Promise.all([
     // Reports + Home totals: aggregated over the FULL month (single source of truth)
     getMonthReport(userId, year, month),
-    // Home: recent transactions list (display only — capped)
+    // Home: recent transactions list (display only — capped).
+    // Exclude TRANSFER: moving money between your own accounts isn't income or
+    // spending, so it shouldn't appear in the home feed.
     prisma.transaction.findMany({
       where: {
         userId,
+        type: { not: "TRANSFER" },
         date: { gte: startOfMonth, lte: endOfMonth },
       },
       include: {
