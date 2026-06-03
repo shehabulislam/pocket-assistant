@@ -120,6 +120,13 @@ export async function updateTransaction(
       return { error: "Transaction not found" };
     }
 
+    // Transfers are paired, account-to-account moves with no category; the edit
+    // form only models income/expense, so editing one here would corrupt its
+    // balance and category. Block it.
+    if (existing.type === "TRANSFER") {
+      return { error: "Transfers can't be edited. Delete and recreate instead." };
+    }
+
     const amount = Math.abs(formData.amount);
     const oldBalanceChange =
       existing.type === "INCOME" ? -existing.amount : existing.amount;
@@ -177,7 +184,44 @@ export async function deleteTransaction(id: string) {
       return { error: "Transaction not found" };
     }
 
-    // Reverse the balance change + delete atomically
+    // A TRANSFER is stored as two legs — money out of one account and into
+    // another. Deleting either leg must remove BOTH and undo BOTH balance
+    // effects, or the accounts drift apart. The legs are created together with
+    // the same amount and exact timestamp, so we pair on those.
+    if (transaction.type === "TRANSFER") {
+      const legs = await prisma.transaction.findMany({
+        where: {
+          userId,
+          type: "TRANSFER",
+          amount: transaction.amount,
+          date: transaction.date,
+        },
+      });
+
+      // Each leg's effect on its own account is undone: the outgoing leg
+      // ("Transfer to …") decremented its account, so add the amount back; the
+      // incoming leg ("Transfer from …") incremented its account, so remove it.
+      const reversals = legs.map((leg) => {
+        const isOutgoing = leg.description?.startsWith("Transfer to") ?? false;
+        return prisma.account.update({
+          where: { id: leg.accountId },
+          data: { balance: { increment: isOutgoing ? leg.amount : -leg.amount } },
+        });
+      });
+
+      await prisma.$transaction([
+        ...reversals,
+        prisma.transaction.deleteMany({
+          where: { id: { in: legs.map((leg) => leg.id) } },
+        }),
+      ]);
+
+      revalidatePath("/");
+      revalidatePath("/settings/accounts");
+      return { success: true };
+    }
+
+    // INCOME / EXPENSE: reverse the single balance change + delete atomically.
     const balanceChange =
       transaction.type === "INCOME"
         ? -transaction.amount
