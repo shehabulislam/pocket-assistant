@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -16,6 +16,8 @@ import {
   RefreshCw,
   Bell,
   Search,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { formatCurrency, formatSignedCurrency, getMonthName } from "@/lib/utils";
 import { createTransaction } from "../transaction/actions";
@@ -65,6 +67,20 @@ interface HomeTabProps {
   dailyReminder: boolean;
 }
 
+const CURRENCY_SYMBOLS: Record<string, string> = {
+  BDT: "৳",
+  USD: "$",
+  EUR: "€",
+  GBP: "£",
+  INR: "₹",
+  JPY: "¥",
+  CNY: "¥",
+};
+
+const getCurrencySymbol = (currency: string) => {
+  return CURRENCY_SYMBOLS[currency] || currency;
+};
+
 export default function HomeTab({
   transactions,
   totalIncome,
@@ -92,6 +108,24 @@ export default function HomeTab({
   const year = currentYear;
   const totalAccountBalance = accounts.reduce((sum, a) => sum + a.balance, 0);
   const netBalance = totalIncome - totalExpense;
+
+  const [showBalance, setShowBalance] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("show-main-balance");
+    if (saved !== null) {
+      const isTrue = saved === "true";
+      setTimeout(() => {
+        setShowBalance(isTrue);
+      }, 0);
+    }
+  }, []);
+
+  const toggleBalance = () => {
+    const nextVal = !showBalance;
+    setShowBalance(nextVal);
+    localStorage.setItem("show-main-balance", String(nextVal));
+  };
 
   // Reminder dismiss state
   const [reminderDismissed, setReminderDismissed] = useState(false);
@@ -263,18 +297,30 @@ export default function HomeTab({
           className="rounded-2xl p-6 text-white animate-scaleIn"
           style={{
             background:
-              totalAccountBalance <= 0
+              totalAccountBalance < 0
                 ? "linear-gradient(135deg, #f87171 0%, #ef4444 50%, #dc2626 100%)"
-                : totalIncome > 0 && totalExpense > totalIncome * 0.75
+                : totalExpense > totalIncome * 0.75 && totalExpense > 0
                   ? "linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%)"
                   : "var(--gradient-card)",
           }}
         >
-          <p className="text-sm font-medium text-white/80 text-center">
-            Total Balance
-          </p>
+          <div className="flex items-center justify-center gap-1.5 text-white/80">
+            <span className="text-sm font-medium">Total Balance</span>
+            <button
+              onClick={toggleBalance}
+              className="p-1 rounded-full hover:bg-white/10 active:scale-95 transition-all focus:outline-none"
+              aria-label={showBalance ? "Hide balance" : "Show balance"}
+              title={showBalance ? "Hide balance" : "Show balance"}
+            >
+              {showBalance ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          </div>
           <p className="text-3xl font-bold text-center mt-1 tracking-tight">
-            {totalAccountBalance < 0 ? `-${formatCurrency(Math.abs(totalAccountBalance), currency)}` : formatCurrency(totalAccountBalance, currency)}
+            {showBalance ? (
+              totalAccountBalance < 0 ? `-${formatCurrency(Math.abs(totalAccountBalance), currency)}` : formatCurrency(totalAccountBalance, currency)
+            ) : (
+              `${getCurrencySymbol(currency)} ••••`
+            )}
           </p>
           <div className="flex justify-between mt-5 pt-4 border-t border-white/20">
             <div className="text-center flex-1">
@@ -282,7 +328,7 @@ export default function HomeTab({
                 This Month In
               </p>
               <p className="text-sm font-semibold mt-0.5">
-                {formatSignedCurrency(totalIncome, currency)}
+                {showBalance ? formatSignedCurrency(totalIncome, currency) : `+${getCurrencySymbol(currency)} ••••`}
               </p>
             </div>
             <div className="text-center flex-1">
@@ -290,7 +336,7 @@ export default function HomeTab({
                 This Month Out
               </p>
               <p className="text-sm font-semibold mt-0.5">
-                -{formatCurrency(totalExpense, currency)}
+                {showBalance ? `-${formatCurrency(totalExpense, currency)}` : `-${getCurrencySymbol(currency)} ••••`}
               </p>
             </div>
           </div>
