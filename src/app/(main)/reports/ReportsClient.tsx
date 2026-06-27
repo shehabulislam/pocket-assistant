@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
 import {
   PieChart,
@@ -13,9 +14,10 @@ import {
   CartesianGrid,
   Tooltip,
 } from "recharts";
-import { TrendingUp, TrendingDown, Wallet } from "lucide-react";
+import { TrendingUp, TrendingDown, Wallet, ChevronRight } from "lucide-react";
 
 interface CategoryBreakdown {
+  categoryId: string;
   name: string;
   icon: string;
   color: string;
@@ -35,6 +37,8 @@ interface ReportsClientProps {
   dailyData: DailyData[];
   currency: string;
   monthLabel: string;
+  monthFrom: string;
+  monthTo: string;
 }
 
 export default function ReportsClient({
@@ -44,6 +48,8 @@ export default function ReportsClient({
   dailyData,
   currency,
   monthLabel,
+  monthFrom,
+  monthTo,
 }: ReportsClientProps) {
   const net = totalIncome - totalExpense;
   const maxCategory = categoryBreakdown[0]?.total || 1;
@@ -189,8 +195,12 @@ export default function ReportsClient({
                     totalExpense > 0
                       ? ((cat.total / totalExpense) * 100).toFixed(1)
                       : "0";
-                  return (
-                    <div key={cat.name}>
+                  // Uncategorized has no real category id, so it can't be filtered.
+                  const isLinkable = cat.categoryId !== "__uncategorized__";
+                  const href = `/transactions?categoryId=${cat.categoryId}&from=${monthFrom}&to=${monthTo}`;
+
+                  const content = (
+                    <>
                       <div className="flex items-center justify-between mb-1">
                         <div className="flex items-center gap-2">
                           <span className="text-base">{cat.icon}</span>
@@ -205,6 +215,9 @@ export default function ReportsClient({
                           <span className="text-xs font-semibold text-gray-900">
                             {formatCurrency(cat.total, currency)}
                           </span>
+                          {isLinkable && (
+                            <ChevronRight size={14} className="text-gray-300" />
+                          )}
                         </div>
                       </div>
                       <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
@@ -216,7 +229,19 @@ export default function ReportsClient({
                           }}
                         />
                       </div>
-                    </div>
+                    </>
+                  );
+
+                  return isLinkable ? (
+                    <Link
+                      key={cat.categoryId}
+                      href={href}
+                      className="block -mx-2 px-2 py-1 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      {content}
+                    </Link>
+                  ) : (
+                    <div key={cat.categoryId}>{content}</div>
                   );
                 })}
               </div>

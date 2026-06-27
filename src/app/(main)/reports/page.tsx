@@ -1,7 +1,15 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getMonthReport } from "@/lib/reports";
+import { getMonthRange, getMonthReport } from "@/lib/reports";
 import ReportsClient from "./ReportsClient";
+
+/** Format a Date as YYYY-MM-DD in server-local time (matches the transactions filter). */
+function toDateInput(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
 
 export default async function ReportsPage() {
   const session = await auth();
@@ -18,6 +26,8 @@ export default async function ReportsPage() {
     }),
   ]);
 
+  const { start, end } = getMonthRange(now.getFullYear(), now.getMonth());
+
   return (
     <ReportsClient
       totalIncome={report.totalIncome}
@@ -29,6 +39,8 @@ export default async function ReportsPage() {
         month: "long",
         year: "numeric",
       })}
+      monthFrom={toDateInput(start)}
+      monthTo={toDateInput(end)}
     />
   );
 }
