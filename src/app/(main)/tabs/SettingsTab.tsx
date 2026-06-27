@@ -457,6 +457,22 @@ export default function SettingsTab(props: SettingsClientProps) {
 
         {/* Privacy & Security */}
         <SettingsSection title="Privacy & Security">
+          <SettingsItem
+            icon={Lock}
+            iconBg="#F59E0B"
+            label="Change Password"
+            subtitle="Update your account password"
+            onClick={() => router.push("/settings/password")}
+          />
+          {isSuperAdmin && (
+            <SettingsItem
+              icon={Users}
+              iconBg="#6366F1"
+              label="Manage Users"
+              subtitle="Reset passwords for any user"
+              onClick={() => router.push("/settings/users")}
+            />
+          )}
           <CheckItem
             icon={Shield}
             iconBg="#EF4444"

@@ -15,6 +15,18 @@ export const signupSchema = z.object({
   path: ["confirmPassword"],
 });
 
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, "Please enter your current password"),
+  newPassword: z.string().min(6, "New password must be at least 6 characters"),
+  confirmPassword: z.string(),
+}).refine((data) => data.newPassword === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+}).refine((data) => data.newPassword !== data.currentPassword, {
+  message: "New password must be different from the current one",
+  path: ["newPassword"],
+});
+
 export const transactionSchema = z.object({
   amount: z.number().positive("Amount must be greater than 0"),
   type: z.enum(["INCOME", "EXPENSE"]),
@@ -26,4 +38,5 @@ export const transactionSchema = z.object({
 
 export type LoginInput = z.infer<typeof loginSchema>;
 export type SignupInput = z.infer<typeof signupSchema>;
+export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
 export type TransactionInput = z.infer<typeof transactionSchema>;
