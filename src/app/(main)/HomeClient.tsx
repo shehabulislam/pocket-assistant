@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useEffect } from "react";
+import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -89,20 +89,8 @@ export default function HomeClient({
 
   const [showBalance, setShowBalance] = useState(false);
 
-  useEffect(() => {
-    const saved = localStorage.getItem("show-main-balance");
-    if (saved !== null) {
-      const isTrue = saved === "true";
-      setTimeout(() => {
-        setShowBalance(isTrue);
-      }, 0);
-    }
-  }, []);
-
   const toggleBalance = () => {
-    const nextVal = !showBalance;
-    setShowBalance(nextVal);
-    localStorage.setItem("show-main-balance", String(nextVal));
+    setShowBalance((prev) => !prev);
   };
 
   // Transaction modal state
