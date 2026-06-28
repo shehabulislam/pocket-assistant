@@ -150,6 +150,17 @@ export default async function HomePage({
 
   const budgetMonthLabel = monthLabel;
 
+  // YYYY-MM-DD bounds for the current month, used to deep-link into the
+  // transactions list filtered by category (matches the transactions filter).
+  const toDateInput = (d: Date) => {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  };
+  const monthFrom = toDateInput(startOfMonth);
+  const monthTo = toDateInput(endOfMonth);
+
   // Check if user has any transactions today (for reminder banner)
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const hasTransactionsToday = transactions.some(
@@ -176,6 +187,8 @@ export default async function HomePage({
       categoryBreakdown={categoryBreakdown}
       dailyData={dailyData}
       monthLabel={monthLabel}
+      monthFrom={monthFrom}
+      monthTo={monthTo}
       // Budgets
       budgets={JSON.parse(JSON.stringify(budgets))}
       spendingByCategory={spendingByCategory}

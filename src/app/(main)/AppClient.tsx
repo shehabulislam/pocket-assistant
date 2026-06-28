@@ -32,6 +32,7 @@ export interface GoalItem {
 }
 
 export interface CategoryBreakdown {
+  categoryId: string;
   name: string;
   icon: string;
   color: string;
@@ -123,6 +124,8 @@ interface AppClientProps {
   categoryBreakdown: CategoryBreakdown[];
   dailyData: DailyData[];
   monthLabel: string;
+  monthFrom: string;
+  monthTo: string;
   // Budget data
   budgets: BudgetItem[];
   spendingByCategory: Record<string, number>;
@@ -178,6 +181,8 @@ export default function AppClient(props: AppClientProps) {
             dailyData={props.dailyData}
             currency={props.currency}
             monthLabel={props.monthLabel}
+            monthFrom={props.monthFrom}
+            monthTo={props.monthTo}
             loans={props.allLoans}
           />
         </div>
